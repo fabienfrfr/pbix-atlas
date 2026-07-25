@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.14"
+__generated_with = "0.23.15"
 app = marimo.App(width="medium")
 
 
@@ -22,7 +22,6 @@ def _():
 
     return (
         LineageGraphBuilder,
-        downstream,
         export_edges_csv,
         export_graphml,
         export_nodes_csv,
@@ -30,14 +29,20 @@ def _():
         graph_summary,
         mo,
         print_tree,
-        upstream,
     )
+
+
+@app.cell
+def _():
+    import subprocess
+    subprocess.run("ls", shell=True)
+    return
 
 
 @app.cell
 def _(mo):
     mo.md("# PBIX Lineage Explorer")
-    pbix_path = mo.ui.text(value="DEMO_ANONYM.pbix", label="Path to .pbix file")
+    pbix_path = mo.ui.text(value="data/DEMO_ANONYM.pbix", label="Path to .pbix file")
     pbix_path
     return (pbix_path,)
 
@@ -62,7 +67,7 @@ def _(mo):
 def _(find_nodes, graph, search):
     matches = find_nodes(graph, search.value) if search.value else []
     matches[:50]
-    return (matches,)
+    return
 
 
 @app.cell
@@ -101,7 +106,9 @@ def _(graph, node_downstream, print_tree):
 
 @app.cell
 def _(mo):
-    mo.md("## Export")
+    mo.md("""
+    ## Export
+    """)
     return
 
 

@@ -16,6 +16,9 @@ lineage_edges.csv
 uv.lock.bak
 uv.lock
 
+data/
+__marimo__
+
 .mcpregistry_*
 
 # IA tools
