@@ -36,13 +36,50 @@ def _():
 def _():
     import subprocess
     subprocess.run("ls", shell=True)
+
+    file_path = "data/DEMO_ANONYM.pbix"
+    return (file_path,)
+
+
+@app.cell
+def _(LineageGraphBuilder, export_graphml, file_path):
+    graph = LineageGraphBuilder().build(file_path)
+    export_graphml(graph, "lineage.graphml")   # opens in Gephi / yEd
+    return (graph,)
+
+
+@app.cell
+def _(graph):
+    import matplotlib.pyplot as plt
+    import networkx as nx
+
+    plt.figure(figsize=(12, 12))
+    pos = nx.spring_layout(graph, k=0.15, iterations=50)
+    nx.draw(graph, pos, with_labels=True, node_size=50, font_size=4)
+    plt.show()
     return
 
 
 @app.cell
-def _(mo):
+def _(graph, mo):
+    from pyvis.network import Network
+
+    net = Network(height="750px", width="100%", directed=True, notebook=False)
+    net.from_nx(graph)
+
+    net.repulsion(node_distance=150, central_gravity=0.3)
+
+    html_path = "graph.html"
+    net.save_graph(html_path)
+
+    mo.Html(open(html_path, "r", encoding="utf-8").read())
+    return
+
+
+@app.cell
+def _(file_path, mo):
     mo.md("# PBIX Lineage Explorer")
-    pbix_path = mo.ui.text(value="data/DEMO_ANONYM.pbix", label="Path to .pbix file")
+    pbix_path = mo.ui.text(value=file_path, label="Path to .pbix file")
     pbix_path
     return (pbix_path,)
 
