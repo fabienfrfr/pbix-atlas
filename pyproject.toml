@@ -1,6 +1,6 @@
 [project]
 name = "pbix-lineage"
-version = "0.1.1"
+version = "0.1.2"
 description = "Universal lineage graph for Power BI (.pbix) files, from physical source to report display."
 readme = "README.md"
 requires-python = ">=3.10"
