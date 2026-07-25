@@ -26,6 +26,7 @@ dependencies = [
     "pygraphviz>=2.0.1",
     "matplotlib>=3.10.9",
     "scipy>=1.15.3",
+    "pathspec>=1.1.1",
 ]
 
 [project.optional-dependencies]

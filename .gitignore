@@ -23,6 +23,9 @@ graph.html
 
 .mcpregistry_*
 
+mapper.py
+project_structure.json
+
 # IA tools
 .opencode/
 .specify/

@@ -111,6 +111,12 @@ uv run pytest     # BDD tests (pytest-bdd) under tests/features/*.feature
 uv build          # produces dist/*.whl and dist/*.tar.gz
 ```
 
-## License
+## AI Setup
 
-MIT
+```bash
+# Install Spec Kit CLI
+uv tool install specify-cli
+
+# Initialize project with opencode integration
+specify init . --here --integration opencode --script py
+```
