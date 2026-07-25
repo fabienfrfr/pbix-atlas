@@ -1,0 +1,58 @@
+[project]
+name = "pbix-lineage"
+version = "0.1.0"
+description = "Universal lineage graph for Power BI (.pbix) files, from physical source to report display."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Votre nom", email = "vous@example.com" },
+]
+keywords = ["power-bi", "pbix", "data-lineage", "dax", "power-query", "networkx"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "pbixray>=0.15",
+    "networkx>=3.0",
+    "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.115",
+    "fastmcp>=2.0,<4",
+    "uvicorn[standard]>=0.30",
+    "python-dotenv>=1.0",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-bdd>=7.0",
+    "marimo>=0.23",
+    "pbix-lineage[api]",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+pbix-lineage = "pbix_lineage.api.app:main"
+
+[project.urls]
+Homepage = "https://github.com/votre-org/pbix-lineage"
+Issues = "https://github.com/votre-org/pbix-lineage/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pbix_lineage"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,15 +1,21 @@
-# Python
 __pycache__/
-*.pyc
-*.pyo
-.venv/
-venv/
+*.py[cod]
 *.egg-info/
-dist/
+.eggs/
 build/
-.mypy_cache/
+dist/
+.venv/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+*.pbix
+*.graphml
+lineage_nodes.csv
+lineage_edges.csv
+.env
+uv.lock.bak
+uv.lock
+
 
 # IA tools
 .opencode/

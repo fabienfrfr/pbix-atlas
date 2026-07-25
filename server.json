@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.votre-org/pbix-lineage",
+  "title": "PBIX Lineage",
+  "description": "Bidirectional data lineage graph for Power BI (.pbix) files, from source to display",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/votre-org/pbix-lineage",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "pbix-lineage",
+      "version": "0.1.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "streamable-http",
+        "url": "http://127.0.0.1:{PBIX_LINEAGE_PORT}/mcp/"
+      },
+      "environmentVariables": [
+        {
+          "name": "PBIX_LINEAGE_PORT",
+          "description": "Port the server listens on",
+          "default": "8080"
+        },
+        {
+          "name": "PBIX_LINEAGE_HOST",
+          "description": "Host interface to bind to",
+          "default": "127.0.0.1"
+        }
+      ]
+    }
+  ]
+}
