@@ -13,7 +13,7 @@ Minimal usage::
     from pbix_lineage import LineageGraphBuilder, print_tree
 
     graph = LineageGraphBuilder().build("my_report.pbix")
-    print_tree(graph, "column::DA_GLD::demandeur", direction="downstream")
+    print_tree(graph, "column::SALES::customer_name", direction="downstream")
 
 The returned graph is a standard ``networkx.DiGraph``.
 """
@@ -42,7 +42,7 @@ from .sources import (
     normalize_source_identifier,
 )
 
-__version__ = "0.1.1"
+__version__ = "0.1.0"
 
 __all__ = [
     "LineageGraphBuilder",
