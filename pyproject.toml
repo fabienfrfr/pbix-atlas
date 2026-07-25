@@ -1,12 +1,12 @@
 [project]
 name = "pbix-lineage"
-version = "0.1.0"
+version = "0.1.1"
 description = "Universal lineage graph for Power BI (.pbix) files, from physical source to report display."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "Votre nom", email = "vous@example.com" },
+    { name = "fabienfrfr", email = "fabien.furfaro@gmail.com" },
 ]
 keywords = ["power-bi", "pbix", "data-lineage", "dax", "power-query", "networkx"]
 classifiers = [
@@ -44,8 +44,8 @@ dev = [
 pbix-lineage = "pbix_lineage.api.app:main"
 
 [project.urls]
-Homepage = "https://github.com/votre-org/pbix-lineage"
-Issues = "https://github.com/votre-org/pbix-lineage/issues"
+Homepage = "https://github.com/fabienfrfr/pbix-lineage"
+Issues = "https://github.com/fabienfrfr/pbix-lineage/issues"
 
 [build-system]
 requires = ["hatchling"]

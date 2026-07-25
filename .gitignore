@@ -16,6 +16,7 @@ lineage_edges.csv
 uv.lock.bak
 uv.lock
 
+.mcpregistry_*
 
 # IA tools
 .opencode/

@@ -1,6 +1,6 @@
 # pbix-lineage
 
-<!-- mcp-name: io.github.votre-org/pbix-lineage -->
+<!-- mcp-name: io.github.fabienfrfr/pbix-lineage -->
 
 Universal lineage graph for Power BI (`.pbix`) files: from physical source to the field displayed in a report visual.
 
@@ -83,19 +83,19 @@ The registry verifies PyPI ownership via the `<!-- mcp-name: ... -->` marker at 
 
 ## Architecture
 
-| Module | Responsibility |
-|---|---|
-| `models.py` | Node/edge types and shared data structures |
-| `sources.py` | Physical source detection (agnostic, configurable) |
-| `pbix_model.py` | Adapter isolating the rest of the code from `pbixray` |
-| `dax.py` | DAX reference parsing (`Table[Field]` / `[Field]`) |
-| `mquery.py` | Dependencies between Power Query queries (table-level) |
-| `layout.py` | Parsing of the internal `Report/Layout` format |
-| `graph_builder.py` | Orchestrator: builds the `networkx.DiGraph` |
-| `navigation.py` | Upstream/downstream traversal, search, export |
-| `api/schemas.py` | Pydantic request/response models |
-| `api/service.py` | Graph cache, framework-agnostic |
-| `api/app.py` | FastAPI app + MCP mount (FastMCP) |
+| Module               | Responsibility                                         |
+| -------------------- | ------------------------------------------------------ |
+| `models.py`        | Node/edge types and shared data structures             |
+| `sources.py`       | Physical source detection (agnostic, configurable)     |
+| `pbix_model.py`    | Adapter isolating the rest of the code from`pbixray` |
+| `dax.py`           | DAX reference parsing (`Table[Field]` / `[Field]`) |
+| `mquery.py`        | Dependencies between Power Query queries (table-level) |
+| `layout.py`        | Parsing of the internal`Report/Layout` format        |
+| `graph_builder.py` | Orchestrator: builds the`networkx.DiGraph`           |
+| `navigation.py`    | Upstream/downstream traversal, search, export          |
+| `api/schemas.py`   | Pydantic request/response models                       |
+| `api/service.py`   | Graph cache, framework-agnostic                        |
+| `api/app.py`       | FastAPI app + MCP mount (FastMCP)                      |
 
 ## Known limitations
 
