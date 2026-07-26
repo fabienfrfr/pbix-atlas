@@ -1,8 +1,8 @@
 import pytest
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from pbix_lineage.models import SourceRef
-from pbix_lineage.sources import SourceDetectorRegistry, normalize_source_identifier
+from pbix_atlas.models import SourceRef
+from pbix_atlas.sources import SourceDetectorRegistry, normalize_source_identifier
 
 scenarios("../features/source_detection.feature")
 

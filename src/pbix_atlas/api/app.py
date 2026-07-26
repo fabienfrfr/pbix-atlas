@@ -10,6 +10,8 @@ from fastmcp.utilities.lifespan import combine_lifespans
 
 from .schemas import (
     BuildGraphRequest,
+    CodegenRequest,
+    CodegenResponse,
     ExportRequest,
     ExportResponse,
     GraphSummaryResponse,
@@ -108,6 +110,19 @@ def export_graph(payload: ExportRequest, request: Request) -> ExportResponse:
     return ExportResponse(**paths)
 
 
+@app.post("/codegen", operation_id="convert_pbix_to_python", response_model=CodegenResponse)
+def convert_pbix_to_python(payload: CodegenRequest, request: Request) -> CodegenResponse:
+    """Convert a .pbix into a single standalone Python file: source ->
+    extraction -> Power Query transforms -> semantic model -> Vizro
+    dashboard. Best-effort: search the output for "TODO" to find every
+    step/measure that needs manual completion (unsupported M/DAX logic)."""
+    try:
+        result = get_cache(request).codegen(payload.pbix_path, payload.output_path)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return CodegenResponse(**result)
+
+
 mcp = FastMCP.from_fastapi(app=app, name="PBIX Lineage")
 
 
@@ -132,11 +147,20 @@ displayed in a report visual. The graph is bidirectional.
    everything a source or column feeds into.
 5. Use `export_graph` to write GraphML/CSV files for external tools
    (Gephi, yEd, a BI dashboard, etc.).
+6. Use `convert_pbix_to_python` to generate a single standalone Python file
+   that reproduces the report end-to-end (extraction, Power Query
+   transforms, measures, Vizro dashboard). It's best-effort: check the
+   returned `stats` and search the file for "TODO" for anything that needs
+   manual completion (custom M/DAX business logic has no safe automatic
+   translation and is never guessed).
 
 ## Notes
 - Node ids are stable and can be copied directly from `search_nodes` results.
 - `get_lineage_tree` is the most convenient call for exploration: it returns
   a full nested tree in one call instead of a flat list of ancestors.
+- `convert_pbix_to_python` embeds the real source connection info (URLs,
+  server names, paths) it detects in the .pbix, so the generated file runs
+  as-is; each one is also overridable via an environment variable.
 """
 
 
@@ -148,7 +172,7 @@ app.mount("/mcp/", mcp_app)
 def main() -> None:
     import uvicorn
 
-    uvicorn.run("pbix_lineage.api.app:app", host=HOST, port=PORT, reload=False)
+    uvicorn.run("pbix_atlas.api.app:app", host=HOST, port=PORT, reload=False)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
-  "name": "io.github.fabienfrfr/pbix-lineage",
+  "name": "io.github.fabienfrfr/pbix-atlas",
   "description": "Bidirectional data lineage graph for Power BI (.pbix) files, from source to display",
   "repository": {
-    "url": "https://github.com/fabienfrfr/pbix-lineage",
+    "url": "https://github.com/fabienfrfr/pbix-atlas",
     "source": "github"
   },
   "version": "0.1.2",
@@ -11,7 +11,7 @@
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
-      "identifier": "pbix-lineage",
+      "identifier": "pbix-atlas",
       "version": "0.1.2",
       "runtimeHint": "uvx",
       "transport": {

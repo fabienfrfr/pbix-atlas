@@ -11,6 +11,9 @@ coverage: ## prod-level > 95%
 mapper: ## Export project structure to JSON
 	uv run python3 mapper.py --to-json
 
+codegen: ## Generate a standalone Python pipeline from a .pbix (usage: make codegen FILE=my_report.pbix)
+	uv run pbix-atlas-codegen $(FILE) -o $(basename $(FILE))_pipeline.py
+
 format:
 	uv run ruff format .
 

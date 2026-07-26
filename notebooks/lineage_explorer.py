@@ -8,7 +8,7 @@ app = marimo.App(width="medium")
 def _():
     import marimo as mo
 
-    from pbix_lineage import (
+    from pbix_atlas import (
         LineageGraphBuilder,
         downstream,
         export_edges_csv,

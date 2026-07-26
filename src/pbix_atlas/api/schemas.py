@@ -55,3 +55,20 @@ class ExportResponse(BaseModel):
     graphml_path: str
     nodes_csv_path: str
     edges_csv_path: str
+
+
+class CodegenRequest(BaseModel):
+    pbix_path: str = Field(description="Path to a .pbix file on the server's filesystem")
+    output_path: str = Field(
+        default="",
+        description="Where to write the generated .py file. Defaults to "
+                     "'<pbix name>_pipeline.py' next to the input file.",
+    )
+
+
+class CodegenResponse(BaseModel):
+    output_path: str
+    stats: dict[str, int] = Field(
+        description="Coverage counters: translated vs. TODO for M steps and DAX measures, "
+                     "and how many visuals were mapped to a Vizro component vs. skipped."
+    )

@@ -1,6 +1,6 @@
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from pbix_lineage.dax import DaxReferenceParser
+from pbix_atlas.dax import DaxReferenceParser
 
 scenarios("../features/dax_references.feature")
 

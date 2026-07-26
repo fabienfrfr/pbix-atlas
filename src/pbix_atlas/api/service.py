@@ -9,6 +9,7 @@ from pathlib import Path
 
 import networkx as nx
 
+from ..codegen import generate_python_pipeline_with_stats
 from ..graph_builder import LineageGraphBuilder
 from ..navigation import (
     build_tree,
@@ -77,3 +78,15 @@ class LineageGraphCache:
             "nodes_csv_path": str(nodes_csv_path),
             "edges_csv_path": str(edges_csv_path),
         }
+
+    def codegen(self, pbix_path: str, output_path: str = "") -> dict:
+        """Generate the standalone Python pipeline for a .pbix. Does not use
+        the cached graph (codegen re-reads the .pbix directly), kept as its
+        own method purely so the API surface stays symmetrical with the
+        lineage-graph endpoints above."""
+        out = Path(output_path) if output_path else Path(pbix_path).with_name(
+            f"{Path(pbix_path).stem}_pipeline.py"
+        )
+        out.parent.mkdir(parents=True, exist_ok=True)
+        written_path, stats = generate_python_pipeline_with_stats(pbix_path, out)
+        return {"output_path": str(written_path), "stats": stats}

@@ -1,5 +1,5 @@
 """
-pbix_lineage
+pbix_atlas
 ============
 
 Turns a Power BI file (.pbix) into a universal lineage graph, from the
@@ -10,7 +10,7 @@ physical source down to the field displayed in a report visual:
 
 Minimal usage::
 
-    from pbix_lineage import LineageGraphBuilder, print_tree
+    from pbix_atlas import LineageGraphBuilder, print_tree
 
     graph = LineageGraphBuilder().build("my_report.pbix")
     print_tree(graph, "column::SALES::customer_name", direction="downstream")
@@ -18,6 +18,7 @@ Minimal usage::
 The returned graph is a standard ``networkx.DiGraph``.
 """
 
+from .codegen import PythonPipelineGenerator, generate_python_pipeline
 from .dax import DaxReferenceParser
 from .graph_builder import LineageGraphBuilder
 from .layout import ReportLayoutParser
@@ -46,6 +47,8 @@ __version__ = "0.1.2"
 
 __all__ = [
     "LineageGraphBuilder",
+    "PythonPipelineGenerator",
+    "generate_python_pipeline",
     "PBIXModel",
     "ReportLayoutParser",
     "DaxReferenceParser",
