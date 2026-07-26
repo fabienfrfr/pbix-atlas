@@ -14,16 +14,22 @@ jobs:
       contains(github.event.comment.body, ' /opencode') ||
       startsWith(github.event.comment.body, '/opencode')
     runs-on: ubuntu-latest
+
     permissions:
       id-token: write
       contents: read
       pull-requests: read
       issues: read
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      # Force usage of Node.js 24-compatible cache version
+      - name: Setup cache (Node 24 compatible)
+        uses: actions/cache@v5
 
       - name: Run opencode
         uses: anomalyco/opencode/github@latest
