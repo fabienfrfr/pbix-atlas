@@ -194,4 +194,3 @@ uv tool install specify-cli
 # Initialize project with opencode integration
 specify init . --here --integration opencode --script py
 ```
-

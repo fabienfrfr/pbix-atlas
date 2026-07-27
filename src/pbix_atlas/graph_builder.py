@@ -59,7 +59,7 @@ class LineageGraphBuilder:
     def _add_sources_and_queries(self, g: nx.DiGraph, queries: dict[str, str]) -> None:
         for name, expr in queries.items():
             qid = node_id(NodeType.QUERY, name)
-            g.add_node(qid, type=NodeType.QUERY.value, label=name)
+            g.add_node(qid, type=NodeType.QUERY.value, label=name, m_source=expr)
 
             for ref in self.source_registry.detect(expr):
                 sid = node_id(NodeType.SOURCE, ref.system, normalize_source_identifier(ref))
@@ -108,9 +108,9 @@ class LineageGraphBuilder:
         measures_df = model.measures()
 
         for _, row in measures_df.iterrows():
-            table, name = str(row["TableName"]), str(row["Name"])
+            table, name, expr = str(row["TableName"]), str(row["Name"]), str(row["Expression"])
             mid = node_id(NodeType.MEASURE, table, name)
-            g.add_node(mid, type=NodeType.MEASURE.value, label=name, table=table)
+            g.add_node(mid, type=NodeType.MEASURE.value, label=name, table=table, dax_expression=expr)
             measure_lookup[(table, name)] = mid
 
         for _, row in measures_df.iterrows():
@@ -169,14 +169,25 @@ class LineageGraphBuilder:
         column_lookup: dict[tuple[str, str], str],
         measure_lookup: dict[tuple[str, str], str],
     ) -> None:
+        from .layout_roles import extract_visual_specs
+
+        role_lookup: dict[tuple[str, int, str, str], str] = {}
+        for spec in extract_visual_specs(layout):
+            for role, fields in spec.roles.items():
+                for table, field_name, _kind in fields:
+                    role_lookup[(spec.page, spec.visual_index, table or "", field_name)] = role
+
         for usage in self.layout_parser.iter_visual_fields(layout):
             vid = node_id(NodeType.VISUAL_FIELD, pbix_name, usage.page, str(usage.visual_index), usage.field)
+            role = role_lookup.get((usage.page, usage.visual_index, usage.table or "", usage.field), "")
             g.add_node(
                 vid,
                 type=NodeType.VISUAL_FIELD.value,
                 label=usage.field,
                 page=usage.page,
+                visual_index=usage.visual_index,
                 visual_type=usage.visual_type,
+                role=role,
             )
 
             source_id = None

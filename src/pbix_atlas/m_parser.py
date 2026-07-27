@@ -146,6 +146,8 @@ class MParser:
                 depth -= 1
             i += 1
         field_name = text[start_pos + 1:i].strip()
+        if field_name.startswith('#"') and field_name.endswith('"'):
+            field_name = field_name[2:-1].replace('""', '"')
         close_pos = i
         while self.tokens[self.i].pos < close_pos and self.tokens[self.i].type != TokType.EOF:
             self.i += 1
