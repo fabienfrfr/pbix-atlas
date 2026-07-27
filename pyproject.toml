@@ -37,7 +37,7 @@ api = [
     "python-dotenv>=1.0",
 ]
 codegen = [
-    "vizro>=0.2.03",
+    "vizro>=0.1.59",
     "plotly>=5.20",
     "sqlalchemy>=2.0",
     "requests>=2.31",

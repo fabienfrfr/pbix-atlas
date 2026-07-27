@@ -1,6 +1,7 @@
 # --- Variables ---
 
 ENV_FILE=.env
+SRC_INIT=src/pbix_atlas/__init__.py
 
 # --- Feature ---
 
@@ -16,6 +17,31 @@ codegen: ## Generate a standalone Python pipeline from a .pbix (usage: make code
 
 format:
 	uv run ruff format .
+
+##@ Release
+
+bump-patch: ## Bump patch version (0.2.0 → 0.2.1) in all files
+	uv version --bump patch
+
+bump-minor: ## Bump minor version (0.2.0 → 0.3.0)
+	uv version --bump minor
+
+bump-major: ## Bump major version (0.2.0 → 1.0.0)
+	uv version --bump major
+
+build: ## Build package for PyPI
+	uv build
+
+publish: build ## Publish to PyPI (requires UV_PUBLISH_USERNAME/PASSWORD in .env)
+	uv publish
+
+mcp-login: ## Login to MCP registry via GitHub
+	mcp-publisher login github
+
+mcp-publish: ## Publish to MCP registry (dry-run first, then real)
+	mcp-publisher publish --dry-run
+
+release: publish mcp-login mcp-publish ## Full release: build → PyPI → MCP (bump first: make bump-patch)
 
 ##@ Maintenance
 clean: ## Remove python caches and temporary files
