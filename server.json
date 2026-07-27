@@ -6,13 +6,13 @@
     "url": "https://github.com/fabienfrfr/pbix-atlas",
     "source": "github"
   },
-  "version": "0.1.2",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "pbix-atlas",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "streamable-http",

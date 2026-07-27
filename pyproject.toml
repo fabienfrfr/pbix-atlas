@@ -1,6 +1,6 @@
 [project]
 name = "pbix-atlas"
-version = "0.1.2"
+version = "0.2.0"
 description = "Universal lineage graph for Power BI (.pbix) files, from physical source to report display."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,7 +37,7 @@ api = [
     "python-dotenv>=1.0",
 ]
 codegen = [
-    "vizro>=0.1.23",
+    "vizro>=0.2.03",
     "plotly>=5.20",
     "sqlalchemy>=2.0",
     "requests>=2.31",
