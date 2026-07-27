@@ -1,20 +1,11 @@
-"""Pandas helpers mirroring M's stdlib (`Table.*`, `List.*`, `Text.*`, ...).
-Called directly from generated pipelines, e.g.:
-    df = m_ops.table_select_rows(df, lambda row: row["Amount"] > 0)
-"""
-
-from __future__ import annotations
-
 import io
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import pandas as pd
 
 
 def field(target: Any, name: str) -> Any:
-    """Mirrors M's `[Field]` access: on a row (Series/dict) returns the
-    value; on a table returns the whole column as a list (M's `table[col]`
-    column-projection semantics)."""
     if isinstance(target, pd.DataFrame):
         return target[name].tolist()
     if isinstance(target, dict):
@@ -26,7 +17,7 @@ def _col_list(value: Any) -> list[str]:
     return [value] if isinstance(value, str) else list(value)
 
 
-# -- Table.*
+# Table.*
 def table_select_rows(df: pd.DataFrame, predicate: Callable) -> pd.DataFrame:
     if len(df) == 0:
         return df
@@ -48,7 +39,7 @@ def table_remove_columns(df: pd.DataFrame, columns, *_opts) -> pd.DataFrame:
 
 
 def table_rename_columns(df: pd.DataFrame, pairs, *_opts) -> pd.DataFrame:
-    return df.rename(columns=dict((p[0], p[1]) for p in pairs))
+    return df.rename(columns={p[0]: p[1] for p in pairs})
 
 
 def table_reorder_columns(df: pd.DataFrame, columns) -> pd.DataFrame:
@@ -110,7 +101,6 @@ def _is_m_null(x: Any) -> bool:
 
 
 def default_replacer(current, match_or_old_value, new_value):
-    """Mirrors M's built-in `Replacer.ReplaceValue`."""
     if match_or_old_value is True:
         return new_value
     if match_or_old_value is False:
@@ -119,15 +109,16 @@ def default_replacer(current, match_or_old_value, new_value):
 
 
 def default_text_replacer(current, text_to_find, text_to_replace):
-    """Mirrors M's built-in `Replacer.ReplaceText`."""
     return current.replace(text_to_find, text_to_replace) if isinstance(current, str) else current
 
 
 def table_replace_value(
-    df: pd.DataFrame, old_value: Any, new_value: Any, replacer: Callable, columns,
+    df: pd.DataFrame,
+    old_value: Any,
+    new_value: Any,
+    replacer: Callable,
+    columns,
 ) -> pd.DataFrame:
-    """`old_value` may be a plain value or a `lambda row: bool` selector
-    (mirrors M's `Table.ReplaceValue` accepting a row-selector function)."""
     out = df.copy()
     is_selector = callable(old_value)
     for col in _col_list(columns):
@@ -135,21 +126,27 @@ def table_replace_value(
             continue
         if is_selector:
             out[col] = out.apply(
-                lambda row, _c=col: replacer(row[_c], bool(old_value(row)), new_value), axis=1,
+                lambda row, _c=col: replacer(row[_c], bool(old_value(row)), new_value),
+                axis=1,
             )
         else:
             out[col] = out[col].apply(lambda v: replacer(v, old_value, new_value))
     return out
 
 
-def table_nested_join(
-    left: pd.DataFrame, left_keys, right: pd.DataFrame, right_keys, new_column: str, join_kind: str = "left",
+def table_nested_join(  # noqa: PLR0913, PLR0917
+    left: pd.DataFrame,
+    left_keys,
+    right: pd.DataFrame,
+    right_keys,
+    new_column: str,
+    join_kind: str = "left",
 ) -> pd.DataFrame:
     left_keys, right_keys = _col_list(left_keys), _col_list(right_keys)
 
     def matches(row):
         mask = pd.Series(True, index=right.index)
-        for lk, rk in zip(left_keys, right_keys):
+        for lk, rk in zip(left_keys, right_keys, strict=False):
             mask &= right[rk] == row[lk]
         return right[mask].reset_index(drop=True)
 
@@ -166,10 +163,10 @@ def table_expand_table_column(df: pd.DataFrame, column: str, expand_columns, new
         nested = row[column]
         base = {k: v for k, v in row.items() if k != column}
         if nested is None or len(nested) == 0:
-            rows.append({**base, **{nn: None for nn in new_names}})
+            rows.append({**base, **dict.fromkeys(new_names)})
         else:
             for _, nrow in nested.iterrows():
-                rows.append({**base, **{nn: nrow.get(ec) for ec, nn in zip(expand_columns, new_names)}})
+                rows.append({**base, **{nn: nrow.get(ec) for ec, nn in zip(expand_columns, new_names, strict=False)}})
     return pd.DataFrame(rows)
 
 
@@ -177,7 +174,7 @@ def table_expand_record_column(df: pd.DataFrame, column: str, fields, new_names=
     fields = _col_list(fields)
     new_names = _col_list(new_names) if new_names else fields
     out = df.copy()
-    for field, name in zip(fields, new_names):
+    for field, name in zip(fields, new_names, strict=False):
         out[name] = out[column].apply(lambda rec, _f=field: rec.get(_f) if isinstance(rec, dict) else None)
     return out.drop(columns=[column])
 
@@ -190,7 +187,7 @@ def table_group(df: pd.DataFrame, keys, aggregations) -> pd.DataFrame:
     rows = []
     for key_values, sub in df.groupby(keys, dropna=False):
         key_values = key_values if isinstance(key_values, tuple) else (key_values,)
-        row = dict(zip(keys, key_values))
+        row = dict(zip(keys, key_values, strict=False))
         sub = sub.reset_index(drop=True)
         for name, agg_fn in agg_pairs:
             row[name] = agg_fn(sub)
@@ -257,7 +254,7 @@ def table_to_rows(df: pd.DataFrame) -> list:
     return df.values.tolist()
 
 
-# -- List.*
+# List.*
 def list_select(items: list, predicate: Callable) -> list:
     return [x for x in items if predicate(x)]
 
@@ -312,7 +309,7 @@ def list_sum(items: list) -> Any:
     return sum(x for x in items if x is not None)
 
 
-# -- Text.*
+# Text.*
 def text_combine(items: list, delimiter: str = "") -> str:
     return delimiter.join("" if x is None else str(x) for x in items)
 
@@ -329,12 +326,13 @@ def splitter_split_by_each_delimiter(delimiters: list) -> Callable:
         for delim in delimiters:
             parts = [p for part in parts for p in part.split(delim)]
         return parts
+
     return split
 
 
-# -- I/O sources (real extraction, not mocked)
+# I/O sources
 class SqlDatabaseHandle:
-    __slots__ = ("server", "database")
+    __slots__ = ("database", "server")
 
     def __init__(self, server: str, database: str):
         self.server, self.database = server, database
@@ -356,10 +354,6 @@ def odata_feed_handle(url: str, *_opts) -> ODataFeedHandle:
 
 
 def item_access(target: Any, index: Any) -> Any:
-    """Mirrors M's `target{index}` - dispatches on the target's runtime type
-    (a table row, a source handle awaiting its table/entity name, a plain
-    list, ...), since the same `{...}` syntax means different things
-    depending on what it's applied to."""
     if isinstance(target, SqlDatabaseHandle):
         name = index.get("Item") or index.get("Name") if isinstance(index, dict) else index
         schema = index.get("Schema") if isinstance(index, dict) else None
@@ -381,13 +375,19 @@ def item_access(target: Any, index: Any) -> Any:
 
 def sql_query(server: str, database: str, table_or_query: str, schema: str | None = None) -> pd.DataFrame:
     import sqlalchemy
-    engine = sqlalchemy.create_engine(f"mssql+pyodbc://{server}/{database}?driver=ODBC+Driver+17+for+SQL+Server")
+
+    engine = sqlalchemy.create_engine(
+        f"mssql+pyodbc://{server}/{database}?driver=ODBC+Driver+17+for+SQL+Server",
+    )
     ref = f"[{schema}].[{table_or_query}]" if schema else table_or_query
-    return pd.read_sql(f"SELECT * FROM {ref}" if not table_or_query.strip().upper().startswith("SELECT") else table_or_query, engine)
+    if table_or_query.strip().upper().startswith("SELECT"):
+        return pd.read_sql(table_or_query, engine)
+    return pd.read_sql(f"SELECT * FROM {ref}", engine)
 
 
 def odata_entity(url: str, entity_set: str) -> pd.DataFrame:
     import requests
+
     resp = requests.get(f"{url.rstrip('/')}/{entity_set}", timeout=60)
     resp.raise_for_status()
     payload = resp.json()
@@ -396,6 +396,7 @@ def odata_entity(url: str, entity_set: str) -> pd.DataFrame:
 
 def web_contents(url: str) -> bytes:
     import requests
+
     resp = requests.get(url, timeout=60)
     resp.raise_for_status()
     return resp.content
@@ -408,9 +409,11 @@ def file_contents(path: str) -> bytes:
 
 def folder_files(path: str) -> list[dict]:
     from pathlib import Path
+
     return [
         {"Content": p.read_bytes(), "Name": p.name, "Extension": p.suffix, "Folder Path": str(p.parent)}
-        for p in sorted(Path(path).glob("*")) if p.is_file()
+        for p in sorted(Path(path).glob("*"))
+        if p.is_file()
     ]
 
 
@@ -427,11 +430,12 @@ def csv_document(data) -> pd.DataFrame:
 
 def json_document(data) -> Any:
     import json
+
     text = data.decode("utf-8") if isinstance(data, (bytes, bytearray)) else data
     return json.loads(text)
 
 
-# -- Text.*
+# Text.*
 def text_contains(s, sub, *_comparer) -> bool:
     return (sub in s) if s is not None else False
 
@@ -487,7 +491,7 @@ def text_split(s, sep) -> list:
 def text_middle(s, start, count=None):
     if s is None:
         return None
-    return s[start:start + count] if count is not None else s[start:]
+    return s[start : start + count] if count is not None else s[start:]
 
 
 def text_start(s, count):
@@ -502,7 +506,7 @@ def text_after_delimiter(s, delimiter, *_index):
     if s is None:
         return None
     idx = s.rfind(delimiter)
-    return s[idx + len(delimiter):] if idx != -1 else ""
+    return s[idx + len(delimiter) :] if idx != -1 else ""
 
 
 def text_before_delimiter(s, delimiter, *_index):
@@ -512,7 +516,7 @@ def text_before_delimiter(s, delimiter, *_index):
     return s[:idx] if idx != -1 else s
 
 
-# -- Number.*
+# Number.*
 def number_from(value) -> float | None:
     return float(value) if value is not None else None
 
@@ -529,7 +533,7 @@ def number_integer_divide(a, b) -> int:
     return int(a) // int(b)
 
 
-# -- Date.* / DateTime.* / Duration.*
+# Date.*
 def date_from(value) -> pd.Timestamp:
     return pd.Timestamp(value).normalize()
 
@@ -576,7 +580,7 @@ def duration_days(d) -> int:
     return d.days if hasattr(d, "days") else int(d)
 
 
-# -- Record.*
+# Record.*
 def record_field_or_default(record: dict, field_name: str, default=None):
     return record.get(field_name, default) if isinstance(record, dict) else default
 
@@ -585,7 +589,7 @@ def record_field(record: dict, field_name: str):
     return record.get(field_name) if isinstance(record, dict) else None
 
 
-# -- Value.*
+# Value.*
 def value_is(value, type_marker) -> bool:
     if value is None:
         return type_marker is None
@@ -617,7 +621,7 @@ def hash_date(year, month, day) -> pd.Timestamp:
     return pd.Timestamp(int(year), int(month), int(day))
 
 
-def hash_datetime(year, month, day, hour, minute, second) -> pd.Timestamp:
+def hash_datetime(year, month, day, hour, minute, second) -> pd.Timestamp:  # noqa: PLR0913, PLR0917
     return pd.Timestamp(int(year), int(month), int(day), int(hour), int(minute), int(second))
 
 
@@ -628,7 +632,7 @@ def hash_duration(days, hours, minutes, seconds) -> pd.Timedelta:
 def try_or(fn: Callable, otherwise: Callable):
     try:
         return fn()
-    except Exception:  # noqa: BLE001 - mirrors M `try ... otherwise ...` catching any error
+    except Exception:
         return otherwise()
 
 
@@ -638,9 +642,11 @@ def raise_m_error(message):
 
 def binary_from_text(text: str, encoding=None) -> bytes:
     import base64
+
     return base64.b64decode(text) if encoding == "base64" else bytes.fromhex(text)
 
 
 def binary_decompress(data: bytes, compression=None) -> bytes:
     import zlib
+
     return zlib.decompress(data, -zlib.MAX_WBITS) if compression == "deflate" else zlib.decompress(data)

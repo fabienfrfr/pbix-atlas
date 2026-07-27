@@ -1,20 +1,7 @@
-"""Recursive-descent parser for M expressions -> a small AST.
-
-Scoped to what Power Query Desktop actually emits for applied steps
-(let-blocks, function calls, each/lambda, if/then/else, list/record
-literals, field/item access, try/otherwise) rather than the full M grammar.
-Built in-house after a published third-party M parser (pbi-parsers 0.9.5)
-turned out to be missing the `<`/`<=` operators entirely and unable to parse
-multi-parameter or typed lambdas - real gaps that would have meant
-hardcoding workarounds around someone else's incomplete grammar instead of
-owning correctness.
-"""
-
 from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from typing import Optional, Union
 
 from .m_lexer import Token, TokType, tokenize
 
@@ -23,7 +10,6 @@ class MParseError(Exception):
     pass
 
 
-# --------------------------------------------------------------------------- AST
 @dataclass
 class Lit:
     value: object
@@ -36,68 +22,68 @@ class Ident:
 
 @dataclass
 class FieldAccess:
-    target: "MNode"
+    target: MNode
     field: str
 
 
 @dataclass
 class ItemAccess:
-    target: "MNode"
-    index: "MNode"
+    target: MNode
+    index: MNode
 
 
 @dataclass
 class Invoke:
-    func: "MNode"
-    args: list["MNode"]
+    func: MNode
+    args: list[MNode]
 
 
 @dataclass
 class Lambda:
-    params: list[str]     # "_" for `each expr` sugar
-    body: "MNode"
+    params: list[str]
+    body: MNode
 
 
 @dataclass
 class If:
-    cond: "MNode"
-    then_: "MNode"
-    else_: "MNode"
+    cond: MNode
+    then_: MNode
+    else_: MNode
 
 
 @dataclass
 class BinOp:
     op: str
-    left: "MNode"
-    right: "MNode"
+    left: MNode
+    right: MNode
 
 
 @dataclass
 class UnaryOp:
     op: str
-    expr: "MNode"
+    expr: MNode
 
 
 @dataclass
 class ListExpr:
-    items: list["MNode"]
+    items: list[MNode]
 
 
 @dataclass
 class RecordExpr:
-    fields: list[tuple[str, "MNode"]]
+    fields: list[tuple[str, MNode]]
 
 
 @dataclass
 class LetExpr:
-    steps: list[tuple[str, "MNode"]]
-    body: "MNode"
+    steps: list[tuple[str, MNode]]
+    body: MNode
 
 
 @dataclass
 class TryExpr:
-    expr: "MNode"
-    otherwise: Optional["MNode"]
+    expr: MNode
+    otherwise: MNode | None
 
 
 @dataclass
@@ -105,21 +91,39 @@ class TypeLit:
     raw: str
 
 
-MNode = Union[
-    Lit, Ident, FieldAccess, ItemAccess, Invoke, Lambda,
-    If, BinOp, UnaryOp, ListExpr, RecordExpr, LetExpr, TryExpr, TypeLit,
-]
+MNode = (
+    Lit
+    | Ident
+    | FieldAccess
+    | ItemAccess
+    | Invoke
+    | Lambda
+    | If
+    | BinOp
+    | UnaryOp
+    | ListExpr
+    | RecordExpr
+    | LetExpr
+    | TryExpr
+    | TypeLit
+)
 
 
-# ------------------------------------------------------------------------ parser
 _BIN_PRECEDENCE = {
     "or": 1,
     "and": 2,
-    "=": 3, "<>": 3, "<": 3, ">": 3, "<=": 3, ">=": 3,
+    "=": 3,
+    "<>": 3,
+    "<": 3,
+    ">": 3,
+    "<=": 3,
+    ">=": 3,
     "??": 4,
     "&": 5,
-    "+": 6, "-": 6,
-    "*": 7, "/": 7,
+    "+": 6,
+    "-": 6,
+    "*": 7,
+    "/": 7,
 }
 
 
@@ -130,9 +134,6 @@ class MParser:
         self.i = 0
 
     def _read_bracket_field(self) -> str:
-        """Reads a `[Field Name]` field reference straight off the source
-        text (not tokens): M column names can contain spaces/accents/etc.
-        without quoting, so they don't tokenize as a single identifier."""
         start_pos = self._peek().pos
         text = self.text
         i = start_pos + 1
@@ -146,7 +147,7 @@ class MParser:
                     break
                 depth -= 1
             i += 1
-        field_name = text[start_pos + 1:i].strip()
+        field_name = text[start_pos + 1 : i].strip()
         if field_name.startswith('#"') and field_name.endswith('"'):
             field_name = field_name[2:-1].replace('""', '"')
         close_pos = i
@@ -157,10 +158,6 @@ class MParser:
         return field_name
 
     def _looks_like_record(self) -> bool:
-        """Disambiguates `[a = 1, b = 2]` (record literal) from `[Field Name]`
-        (bare field access): scan raw text for a top-level `=` before the
-        matching `]` - M record field names are always plain identifiers
-        immediately followed by `=`, whereas field access never contains one."""
         start_pos = self._peek().pos
         text = self.text
         i = start_pos + 1
@@ -210,10 +207,10 @@ class MParser:
         node = self._parse_binary(0)
         while self._check("meta"):
             self._advance()
-            self.parse_unary()  # metadata is evaluated-and-discarded
+            self.parse_unary()
         while self._check("as"):
             self._advance()
-            self._parse_type()  # type ascription is discarded (no runtime effect of interest)
+            self._parse_type()
         return node
 
     def _parse_binary(self, min_prec: int) -> MNode:
@@ -273,7 +270,7 @@ class MParser:
             break
         return args
 
-    def parse_primary(self) -> MNode:  # noqa: PLR0911
+    def parse_primary(self) -> MNode:  # noqa: PLR0911, PLR0912, PLR0915
         tok = self._peek()
 
         if tok.type == TokType.NUMBER:
@@ -369,9 +366,7 @@ class MParser:
 
         raise MParseError(f"unexpected token {tok.value!r} at {tok.pos}")
 
-    def _try_parse_lambda(self) -> Optional[Lambda]:
-        """Try to parse `(p1, p2 [as Type], ...) => body`; on failure, rewind
-        and let the caller fall back to plain parenthesized-expression parsing."""
+    def _try_parse_lambda(self) -> Lambda | None:
         save = self.i
         try:
             self._expect("(")
@@ -390,7 +385,7 @@ class MParser:
                         continue
                     break
             self._expect(")")
-            if self._check("as"):  # return type ascription: `(x as number) as number => ...`
+            if self._check("as"):
                 self._advance()
                 self._parse_type()
             self._expect("=>")
@@ -417,7 +412,7 @@ class MParser:
         body = self.parse_expr()
         return LetExpr(steps=steps, body=body)
 
-    def _parse_type(self) -> MNode:
+    def _parse_type(self) -> MNode:  # noqa: PLR0912
         if self._check("nullable"):
             self._advance()
         tok = self._peek()
@@ -437,7 +432,6 @@ class MParser:
                 raw += " [...]"
             return TypeLit(raw=raw)
         if self._check("function") and self.tokens[self.i + 1].value == "(":
-            # `type function (x as number) as number` - skip the parameter list
             self._advance()
             self._advance()
             depth = 1
@@ -461,17 +455,28 @@ def parse_m_expression(text: str) -> MNode:
     return MParser(text).parse_program()
 
 
-# --------------------------------------------------------------- JSON (de)serialization
-# The graph stores *this* - a structured operation tree - never generated code.
 _NODE_CLASSES = {
-    cls.__name__: cls for cls in
-    (Lit, Ident, FieldAccess, ItemAccess, Invoke, Lambda, If, BinOp, UnaryOp,
-     ListExpr, RecordExpr, LetExpr, TryExpr, TypeLit)
+    cls.__name__: cls
+    for cls in (
+        Lit,
+        Ident,
+        FieldAccess,
+        ItemAccess,
+        Invoke,
+        Lambda,
+        If,
+        BinOp,
+        UnaryOp,
+        ListExpr,
+        RecordExpr,
+        LetExpr,
+        TryExpr,
+        TypeLit,
+    )
 }
 
 
 def ast_to_dict(node):
-    """MNode -> plain JSON-safe dict/list/primitive. Reversible via `ast_from_dict`."""
     if type(node).__name__ in _NODE_CLASSES:
         d = {"_": type(node).__name__}
         for f in dataclasses.fields(node):
@@ -479,11 +484,10 @@ def ast_to_dict(node):
         return d
     if isinstance(node, (list, tuple)):
         return [ast_to_dict(x) for x in node]
-    return node  # str / int / float / bool / None
+    return node
 
 
 def ast_from_dict(d):
-    """Inverse of `ast_to_dict`."""
     if isinstance(d, dict) and "_" in d:
         cls = _NODE_CLASSES[d["_"]]
         kwargs = {f.name: ast_from_dict(d[f.name]) for f in dataclasses.fields(cls)}

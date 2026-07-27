@@ -1,26 +1,28 @@
-"""Runtime interpreter for the M AST produced by `m_parser`.
-
-Rather than transpiling each step into bespoke, per-callsite Python source
-(which only ever handles the specific shapes anticipated at code-generation
-time), this module *executes* the parsed M expression directly against real
-pandas data, using a stdlib registry that implements each M function once,
-generically. Any expression this interpreter's grammar/registry supports runs
-correctly regardless of how it's phrased; anything genuinely unsupported
-raises a clear `MRuntimeError` naming the exact function, rather than being
-silently skipped or stubbed with a TODO.
-"""
-
 from __future__ import annotations
 
 import io
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 
 from .m_parser import (
-    BinOp, FieldAccess, If, Ident, Invoke, ItemAccess, Lambda, LetExpr,
-    Lit, ListExpr, MNode, RecordExpr, TryExpr, TypeLit, UnaryOp,
+    BinOp,
+    FieldAccess,
+    Ident,
+    If,
+    Invoke,
+    ItemAccess,
+    Lambda,
+    LetExpr,
+    ListExpr,
+    Lit,
+    MNode,
+    RecordExpr,
+    TryExpr,
+    TypeLit,
+    UnaryOp,
 )
 
 
@@ -34,6 +36,7 @@ class MRuntimeError(Exception):
 class MTable:
     """M's `table` value: a thin pandas.DataFrame wrapper so the interpreter
     can distinguish tables from plain records/lists at runtime."""
+
     df: pd.DataFrame
 
     def __repr__(self) -> str:
@@ -44,20 +47,21 @@ class MTable:
 class MFunction:
     """A closure: an M `each`/`(x,y)=>` lambda plus the environment it
     captured, so nested lambdas see their enclosing step bindings."""
+
     params: list[str]
     body: MNode
-    closure: "Env"
-    interpreter: "MInterpreter" = field(repr=False)
+    closure: Env
+    interpreter: MInterpreter = field(repr=False)
 
     def call(self, args: list[Any]) -> Any:
         child = self.closure.child()
-        for name, val in zip(self.params, args):
+        for name, val in zip(self.params, args, strict=False):
             child.set(name, val)
         return self.interpreter.eval(self.body, child)
 
 
 class Env:
-    def __init__(self, parent: "Env | None" = None):
+    def __init__(self, parent: Env | None = None):
         self.vars: dict[str, Any] = {}
         self.parent = parent
 
@@ -80,7 +84,7 @@ class Env:
     def set(self, name: str, value: Any) -> None:
         self.vars[name] = value
 
-    def child(self) -> "Env":
+    def child(self) -> Env:
         return Env(parent=self)
 
 
@@ -115,7 +119,7 @@ class MInterpreter:
         self.stdlib = {**_default_stdlib(), **(stdlib or {})}
         self.globals = {**_default_globals(), **(globals_ or {})}
 
-    def eval(self, node: MNode, env: Env) -> Any:  # noqa: PLR0911
+    def eval(self, node: MNode, env: Env) -> Any:  # noqa: PLR0911, PLR0912
         if isinstance(node, Lit):
             return node.value
         if isinstance(node, Ident):
@@ -186,6 +190,7 @@ class MInterpreter:
     def _get_item(self, target: Any, index: Any) -> Any:
         if isinstance(target, SqlDatabaseHandle):
             import sqlalchemy
+
             schema = index.get("Schema") if isinstance(index, dict) else None
             name = index.get("Item") or index.get("Name") if isinstance(index, dict) else None
             table_ref = f"[{schema}].[{name}]" if schema else f"[{name}]"
@@ -195,6 +200,7 @@ class MInterpreter:
             return MTable(pd.read_sql(f"SELECT * FROM {table_ref}", engine))
         if isinstance(target, ODataFeedHandle):
             import requests
+
             name = index.get("Name") if isinstance(index, dict) else None
             resp = requests.get(f"{target.url.rstrip('/')}/{name}", timeout=60)
             resp.raise_for_status()
@@ -219,7 +225,7 @@ class MInterpreter:
             return target.df.iloc[int(index)]
         raise MRuntimeError(f"Cannot index {type(target).__name__} with {index!r}")
 
-    def _eval_binop(self, node: BinOp, env: Env) -> Any:
+    def _eval_binop(self, node: BinOp, env: Env) -> Any:  # noqa: PLR0911, PLR0912
         if node.op == "and":
             return self.eval(node.left, env) and self.eval(node.right, env)
         if node.op == "or":
@@ -302,24 +308,46 @@ def _m_str(value: Any) -> str:
 def _default_globals() -> dict[str, Any]:
     return {
         # sort order markers
-        "Order.Ascending": "asc", "Order.Descending": "desc",
+        "Order.Ascending": "asc",
+        "Order.Descending": "desc",
         # join kinds
-        "JoinKind.Inner": "inner", "JoinKind.LeftOuter": "left",
-        "JoinKind.RightOuter": "right", "JoinKind.FullOuter": "outer",
-        "JoinKind.LeftAnti": "left_anti", "JoinKind.RightAnti": "right_anti",
+        "JoinKind.Inner": "inner",
+        "JoinKind.LeftOuter": "left",
+        "JoinKind.RightOuter": "right",
+        "JoinKind.FullOuter": "outer",
+        "JoinKind.LeftAnti": "left_anti",
+        "JoinKind.RightAnti": "right_anti",
         # column type markers used by Table.TransformColumnTypes
-        "Int64.Type": "Int64", "Byte.Type": "Int64", "Currency.Type": "float",
-        "Number.Type": "float", "Double.Type": "float", "Percentage.Type": "float",
-        "Text.Type": "string", "Date.Type": "date", "DateTime.Type": "datetime",
-        "DateTimeZone.Type": "datetime", "Time.Type": "time", "Logical.Type": "bool",
-        "Any.Type": None, "Binary.Type": None, "None.Type": None,
+        "Int64.Type": "Int64",
+        "Byte.Type": "Int64",
+        "Currency.Type": "float",
+        "Number.Type": "float",
+        "Double.Type": "float",
+        "Percentage.Type": "float",
+        "Text.Type": "string",
+        "Date.Type": "date",
+        "DateTime.Type": "datetime",
+        "DateTimeZone.Type": "datetime",
+        "Time.Type": "time",
+        "Logical.Type": "bool",
+        "Any.Type": None,
+        "Binary.Type": None,
+        "None.Type": None,
         # misc
-        "Compression.Deflate": "deflate", "BinaryEncoding.Base64": "base64",
-        "QuoteStyle.Csv": "csv", "QuoteStyle.None": "none",
-        "TextEncoding.Utf8": "utf-8", "ExtraValues.Ignore": "ignore", "ExtraValues.Error": "error",
-        "MissingField.UseNull": "use_null", "MissingField.Ignore": "ignore",
-        "RoundingMode.Down": "down", "RoundingMode.Up": "up",
-        "Occurrence.All": "all", "Occurrence.First": "first", "Occurrence.Last": "last",
+        "Compression.Deflate": "deflate",
+        "BinaryEncoding.Base64": "base64",
+        "QuoteStyle.Csv": "csv",
+        "QuoteStyle.None": "none",
+        "TextEncoding.Utf8": "utf-8",
+        "ExtraValues.Ignore": "ignore",
+        "ExtraValues.Error": "error",
+        "MissingField.UseNull": "use_null",
+        "MissingField.Ignore": "ignore",
+        "RoundingMode.Down": "down",
+        "RoundingMode.Up": "up",
+        "Occurrence.All": "all",
+        "Occurrence.First": "first",
+        "Occurrence.Last": "last",
         "Precision.Double": "double",
     }
 
@@ -329,7 +357,7 @@ def _col_list(value: Any) -> list[str]:
     if isinstance(value, str):
         return [value]
     if isinstance(value, list):
-        return [v if isinstance(v, str) else v for v in value]
+        return list(value)
     raise MRuntimeError(f"Expected a column name or list of names, got {value!r}")
 
 
@@ -403,38 +431,57 @@ def _fn_table_transformcolumns(interp, table: MTable, specs: list, *_opt) -> MTa
     for spec in specs:
         col, fn = spec[0], spec[1]
         if col in df.columns:
-            df[col] = df[col].apply(lambda v: fn.call([v]) if isinstance(fn, MFunction) else fn(v))
+            df[col] = df[col].apply(lambda v, _fn=fn: _fn.call([v]) if isinstance(_fn, MFunction) else _fn(v))
     return MTable(df)
 
 
-def _fn_table_replacevalue(interp, table: MTable, old_val, new_val, replacer, cols) -> MTable:
+def _fn_table_replacevalue(  # noqa: PLR0913, PLR0917
+    interp,
+    table: MTable,
+    old_val,
+    new_val,
+    replacer,
+    cols,
+) -> MTable:
     df = table.df.copy()
     for c in _col_list(cols):
         if c not in df.columns:
             continue
         if isinstance(old_val, MFunction):
+
             def _apply(row, _c=c):
                 is_match = bool(old_val.call([row]))
                 if isinstance(replacer, MFunction):
                     return replacer.call([row[_c], is_match, new_val])
                 return new_val if is_match else row[_c]
+
             df[c] = df.apply(_apply, axis=1)
         else:
+
             def _apply_scalar(v, _c=c):
                 if isinstance(replacer, MFunction):
                     return replacer.call([v, old_val, new_val])
                 return new_val if v == old_val else v
+
             df[c] = df[c].apply(_apply_scalar)
     return MTable(df)
 
 
-def _fn_table_nestedjoin(interp, t1: MTable, keys1, t2: MTable, keys2, new_col: str, join_kind="left") -> MTable:
+def _fn_table_nestedjoin(  # noqa: PLR0913, PLR0917
+    interp,
+    t1: MTable,
+    keys1,
+    t2: MTable,
+    keys2,
+    new_col: str,
+    join_kind="left",
+) -> MTable:
     keys1, keys2 = _col_list(keys1), _col_list(keys2)
     df1, df2 = t1.df, t2.df
 
     def find_matches(row):
         mask = pd.Series(True, index=df2.index)
-        for k1, k2 in zip(keys1, keys2):
+        for k1, k2 in zip(keys1, keys2, strict=False):
             mask &= df2[k2] == row[k1]
         return MTable(df2[mask].reset_index(drop=True))
 
@@ -454,12 +501,12 @@ def _fn_table_expandtablecolumn(interp, table: MTable, col_name: str, expand_col
         nested_df = nested.df if isinstance(nested, MTable) else pd.DataFrame()
         if len(nested_df) == 0:
             merged = dict(base)
-            merged.update({nn: None for nn in new_names})
+            merged.update(dict.fromkeys(new_names))
             rows.append(merged)
         else:
             for _, nrow in nested_df.iterrows():
                 merged = dict(base)
-                for ec, nn in zip(expand_cols, new_names):
+                for ec, nn in zip(expand_cols, new_names, strict=False):
                     merged[nn] = nrow.get(ec)
                 rows.append(merged)
     return MTable(pd.DataFrame(rows))
@@ -469,8 +516,8 @@ def _fn_table_expandrecordcolumn(interp, table: MTable, col_name: str, fields, n
     fields = _col_list(fields)
     new_names = _col_list(new_names) if new_names else fields
     df = table.df.copy()
-    for f_, nn in zip(fields, new_names):
-        df[nn] = df[col_name].apply(lambda rec: rec.get(f_) if isinstance(rec, dict) else None)
+    for f_, nn in zip(fields, new_names, strict=False):
+        df[nn] = df[col_name].apply(lambda rec, _f=f_: rec.get(_f) if isinstance(rec, dict) else None)
     return MTable(df.drop(columns=[col_name]))
 
 
@@ -483,7 +530,7 @@ def _fn_table_group(interp, table: MTable, keys, agg_specs: list) -> MTable:
     rows = []
     for key_vals, sub in df.groupby(keys, dropna=False):
         key_vals = key_vals if isinstance(key_vals, tuple) else (key_vals,)
-        row = dict(zip(keys, key_vals))
+        row = dict(zip(keys, key_vals, strict=False))
         sub_table = MTable(sub.reset_index(drop=True))
         for spec in agg_specs:
             new_name, agg_fn = spec[0], spec[1]
@@ -601,16 +648,19 @@ def _fn_number_from(interp, value) -> float:
 
 def _fn_binary_fromtext(interp, text: str, encoding=None) -> bytes:
     import base64
+
     return base64.b64decode(text) if encoding == "base64" else bytes.fromhex(text)
 
 
 def _fn_binary_decompress(interp, data: bytes, compression=None) -> bytes:
     import zlib
+
     return zlib.decompress(data, -zlib.MAX_WBITS) if compression == "deflate" else zlib.decompress(data)
 
 
 def _fn_json_document(interp, data) -> Any:
     import json
+
     text = data.decode("utf-8") if isinstance(data, (bytes, bytearray)) else data
     return json.loads(text)
 
@@ -618,7 +668,7 @@ def _fn_json_document(interp, data) -> Any:
 def _fn_csv_document(interp, data, *_opt) -> MTable:
     text = data.decode("utf-8") if isinstance(data, (bytes, bytearray)) else data
     df = pd.read_csv(io.StringIO(text), header=None)
-    df.columns = [f"Column{i+1}" for i in range(len(df.columns))]
+    df.columns = [f"Column{i + 1}" for i in range(len(df.columns))]
     return MTable(df)
 
 
@@ -636,6 +686,7 @@ def _fn_odata_feed(interp, url: str, *_opt) -> ODataFeedHandle:
 
 def _fn_web_contents(interp, url: str, options=None) -> bytes:
     import requests
+
     resp = requests.get(url, timeout=60)
     resp.raise_for_status()
     return resp.content
@@ -648,6 +699,7 @@ def _fn_file_contents(interp, path: str) -> bytes:
 
 def _fn_folder_files(interp, path: str) -> list:
     from pathlib import Path
+
     out = []
     for p in sorted(Path(path).glob("*")):
         if p.is_file():
@@ -660,7 +712,7 @@ def _fn_excel_workbook(interp, binary: bytes, *_opt) -> list:
     return [{"Name": name, "Item": name, "Kind": "Sheet", "Data": MTable(df)} for name, df in sheets.items()]
 
 
-def _fn_list_accumulate(interp, items: list, seed, fn: "MFunction") -> Any:
+def _fn_list_accumulate(interp, items: list, seed, fn: MFunction) -> Any:
     state = seed
     for item in items:
         state = fn.call([state, item])
@@ -696,7 +748,7 @@ def _fn_table_replaceerrorvalues(interp, table: MTable, replacements: list) -> M
 
 def _fn_table_splitcolumn(interp, table: MTable, source_col: str, splitter, names, *_opt) -> MTable:
     df = table.df.copy()
-    names = _col_list(names) if not isinstance(names, int) else [f"{source_col}.{i+1}" for i in range(names)]
+    names = _col_list(names) if not isinstance(names, int) else [f"{source_col}.{i + 1}" for i in range(names)]
     split_values = df[source_col].apply(lambda v: splitter(v) if v is not None else [])
     for i, name in enumerate(names):
         df[name] = split_values.apply(lambda parts, _i=i: parts[_i] if _i < len(parts) else None)
@@ -711,7 +763,7 @@ def _fn_text_afterdelimiter(interp, text: str, delimiter: str, *_opt) -> str:
     if text is None:
         return None
     idx = text.rfind(delimiter)
-    return text[idx + len(delimiter):] if idx != -1 else ""
+    return text[idx + len(delimiter) :] if idx != -1 else ""
 
 
 def _fn_text_beforedelimiter(interp, text: str, delimiter: str, *_opt) -> str:
@@ -747,6 +799,7 @@ def _fn_splitter_splittextbyeachdelimiter(interp, delimiters: list, *_opt):
                 new_parts.extend(p.split(delim))
             parts = new_parts
         return parts
+
     return _split
 
 
@@ -759,15 +812,15 @@ def _fn_hash_table(interp, columns, rows) -> MTable:
     return MTable(pd.DataFrame(rows, columns=col_names))
 
 
-def _fn_hash_date(interp, year, month, day) -> "pd.Timestamp":
+def _fn_hash_date(interp, year, month, day) -> pd.Timestamp:
     return pd.Timestamp(int(year), int(month), int(day))
 
 
-def _fn_hash_datetime(interp, year, month, day, hour, minute, second) -> "pd.Timestamp":
+def _fn_hash_datetime(interp, year, month, day, hour, minute, second) -> pd.Timestamp:  # noqa: PLR0913, PLR0917
     return pd.Timestamp(int(year), int(month), int(day), int(hour), int(minute), int(second))
 
 
-def _fn_hash_duration(interp, days, hours, minutes, seconds) -> "pd.Timedelta":
+def _fn_hash_duration(interp, days, hours, minutes, seconds) -> pd.Timedelta:
     return pd.Timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
 
 
@@ -841,7 +894,7 @@ def _default_stdlib() -> dict[str, Callable]:
         "Text.Length": lambda i, s: len(s) if s is not None else 0,
         "Text.Replace": lambda i, s, old, new: s.replace(old, new) if s is not None else None,
         "Text.Split": lambda i, s, sep: s.split(sep) if s is not None else [],
-        "Text.Middle": lambda i, s, start, count=None: s[start:start + count] if count is not None else s[start:],
+        "Text.Middle": lambda i, s, start, count=None: s[start : start + count] if count is not None else s[start:],
         "Text.Start": lambda i, s, count: s[:count] if s is not None else None,
         "Text.End": lambda i, s, count: s[-count:] if s is not None else None,
         "Combiner.CombineTextByDelimiter": _fn_combiner_combinetextbydelimiter,
@@ -852,8 +905,12 @@ def _default_stdlib() -> dict[str, Callable]:
         "Date.Day": lambda i, d: pd.Timestamp(d).day if d is not None else None,
         "Date.DayOfWeek": lambda i, d, *_o: pd.Timestamp(d).dayofweek if d is not None else None,
         "Date.WeekOfYear": lambda i, d: pd.Timestamp(d).isocalendar()[1] if d is not None else None,
-        "Date.StartOfWeek": lambda i, d, *_o: (pd.Timestamp(d) - pd.Timedelta(days=pd.Timestamp(d).dayofweek)).normalize(),
-        "Date.EndOfWeek": lambda i, d, *_o: (pd.Timestamp(d) + pd.Timedelta(days=6 - pd.Timestamp(d).dayofweek)).normalize(),
+        "Date.StartOfWeek": lambda i, d, *_o: (
+            pd.Timestamp(d) - pd.Timedelta(days=pd.Timestamp(d).dayofweek)
+        ).normalize(),
+        "Date.EndOfWeek": lambda i, d, *_o: (
+            pd.Timestamp(d) + pd.Timedelta(days=6 - pd.Timestamp(d).dayofweek)
+        ).normalize(),
         "Date.ToText": lambda i, d, *_o: pd.Timestamp(d).strftime("%Y-%m-%d") if d is not None else None,
         "DateTime.LocalNow": _fn_datetime_localnow,
         "Duration.Days": lambda i, d: d.days if hasattr(d, "days") else int(d),

@@ -1,13 +1,3 @@
-"""Tokenizer for the M (Power Query Formula Language) expression syntax.
-
-Home-grown rather than a third-party dependency: real Power Query files
-exercise operators (`<`, `<=`, `??`) that at least one published M-parsing
-package on PyPI (pbi-parsers 0.9.5) doesn't implement, and patching a vendored
-third-party grammar turned into hardcoding around its gaps rather than
-actually owning correctness. This lexer is small and fully covers the
-tokens used by real applied-steps M code.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,16 +7,33 @@ from enum import Enum, auto
 class TokType(Enum):
     NUMBER = auto()
     STRING = auto()
-    IDENT = auto()          # bare identifier, dotted identifier, or #"quoted identifier"
+    IDENT = auto()  # bare identifier, dotted identifier, or #"quoted identifier"
     KEYWORD = auto()
     OP = auto()
     EOF = auto()
 
 
 KEYWORDS = {
-    "let", "in", "each", "if", "then", "else", "and", "or", "not",
-    "true", "false", "null", "type", "meta", "as", "try", "otherwise",
-    "error", "nullable", "is",
+    "let",
+    "in",
+    "each",
+    "if",
+    "then",
+    "else",
+    "and",
+    "or",
+    "not",
+    "true",
+    "false",
+    "null",
+    "type",
+    "meta",
+    "as",
+    "try",
+    "otherwise",
+    "error",
+    "nullable",
+    "is",
 }
 
 # Longest-match-first: order matters.
@@ -45,7 +52,7 @@ class MLexError(Exception):
     pass
 
 
-def tokenize(text: str) -> list[Token]:
+def tokenize(text: str) -> list[Token]:  # noqa: PLR0912, PLR0915
     tokens: list[Token] = []
     i, n = 0, len(text)
     while i < n:
@@ -87,7 +94,7 @@ def tokenize(text: str) -> list[Token]:
             j = i + 1
             while j < n and (text[j].isalnum() or text[j] == "_"):
                 j += 1
-            tokens.append(Token(TokType.IDENT, "#" + text[i + 1:j], i))
+            tokens.append(Token(TokType.IDENT, "#" + text[i + 1 : j], i))
             i = j
             continue
 

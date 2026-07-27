@@ -1,4 +1,3 @@
-import pytest
 from pytest_bdd import given, parsers, scenarios, then, when
 
 from pbix_atlas.models import SourceRef

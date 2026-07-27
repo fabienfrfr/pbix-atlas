@@ -44,82 +44,69 @@ app = FastAPI(title="PBIX Lineage Gateway", lifespan=lineage_lifespan)
 
 @app.post("/graphs", operation_id="build_graph", response_model=GraphSummaryResponse)
 def build_graph(payload: BuildGraphRequest, request: Request) -> GraphSummaryResponse:
-    """Parse a .pbix file and build (or reuse) its lineage graph."""
     try:
         summary = get_cache(request).summary(payload.pbix_path)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return GraphSummaryResponse(pbix_path=payload.pbix_path, **summary)
 
 
 @app.get("/graphs", operation_id="list_loaded_graphs")
 def list_loaded_graphs(request: Request) -> list[str]:
-    """List the .pbix files whose graph is already loaded in memory."""
     return get_cache(request).loaded_paths()
 
 
 @app.post("/search", operation_id="search_nodes", response_model=NodeListResponse)
 def search_nodes(payload: SearchRequest, request: Request) -> NodeListResponse:
-    """Find nodes (columns, measures, visual fields...) by substring."""
     try:
         nodes = get_cache(request).search(payload.pbix_path, payload.query)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return NodeListResponse(nodes=nodes)
 
 
 @app.post("/upstream", operation_id="get_upstream", response_model=NodeListResponse)
 def get_upstream(payload: NodeQuery, request: Request) -> NodeListResponse:
-    """List every node upstream of a given node, i.e. toward the physical source."""
     try:
         nodes = get_cache(request).upstream(payload.pbix_path, payload.node_id, payload.include_relationships)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return NodeListResponse(nodes=nodes)
 
 
 @app.post("/downstream", operation_id="get_downstream", response_model=NodeListResponse)
 def get_downstream(payload: NodeQuery, request: Request) -> NodeListResponse:
-    """List every node downstream of a given node, i.e. toward the report display."""
     try:
         nodes = get_cache(request).downstream(payload.pbix_path, payload.node_id, payload.include_relationships)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return NodeListResponse(nodes=nodes)
 
 
 @app.post("/tree", operation_id="get_lineage_tree", response_model=TreeNode)
 def get_lineage_tree(payload: TreeQuery, request: Request) -> TreeNode:
-    """Return a nested lineage tree from a node, upstream or downstream."""
     try:
-        tree = get_cache(request).tree(
-            payload.pbix_path, payload.node_id, payload.direction, payload.max_depth
-        )
+        tree = get_cache(request).tree(payload.pbix_path, payload.node_id, payload.direction, payload.max_depth)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return TreeNode(**tree)
 
 
 @app.post("/export", operation_id="export_graph", response_model=ExportResponse)
 def export_graph(payload: ExportRequest, request: Request) -> ExportResponse:
-    """Export the lineage graph to GraphML and CSV files on disk."""
     try:
         paths = get_cache(request).export(payload.pbix_path, payload.output_dir)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return ExportResponse(**paths)
 
 
 @app.post("/codegen", operation_id="convert_pbix_to_python", response_model=CodegenResponse)
 def convert_pbix_to_python(payload: CodegenRequest, request: Request) -> CodegenResponse:
-    """Convert a .pbix into a single standalone Python file: source ->
-    extraction -> Power Query transforms -> semantic model -> Vizro
-    dashboard. Best-effort: search the output for "TODO" to find every
-    step/measure that needs manual completion (unsupported M/DAX logic)."""
     try:
         result = get_cache(request).codegen(payload.pbix_path, payload.output_path)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return CodegenResponse(**result)
 
 
@@ -128,7 +115,6 @@ mcp = FastMCP.from_fastapi(app=app, name="PBIX Lineage")
 
 @mcp.prompt
 def lineage_guidance() -> str:
-    """Short best-practice guidance for the PBIX Lineage MCP."""
     return """
 # PBIX Lineage Guidance
 

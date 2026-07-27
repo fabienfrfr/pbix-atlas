@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 
 class NodeType(str, Enum):
@@ -18,22 +17,22 @@ class NodeType(str, Enum):
 
 
 class EdgeType(str, Enum):
-    FEEDS = "feeds"                # source -> query, query -> query, query -> column
+    FEEDS = "feeds"  # source -> query, query -> query, query -> column
     DERIVES_FROM = "derives_from"  # calculated column / measure depends on another node
-    RELATES_TO = "relates_to"      # model relationship (join)
+    RELATES_TO = "relates_to"  # model relationship (join)
     DISPLAYED_IN = "displayed_in"  # column/measure -> visual field
 
 
 @dataclass(frozen=True)
 class SourceRef:
-    system: str        # "http", "odata", "sql", "folder", "excel_file", ...
+    system: str  # "http", "odata", "sql", "folder", "excel_file", ...
     identifier: str
     raw_match: str
 
 
 @dataclass(frozen=True)
 class DaxReference:
-    table: Optional[str]  # None for an unqualified reference, e.g. [MyMeasure]
+    table: str | None  # None for an unqualified reference, e.g. [MyMeasure]
     name: str
 
 
@@ -43,7 +42,7 @@ class VisualFieldUsage:
     visual_index: int
     visual_type: str
     field_kind: str  # "Column" | "Measure" | "HierarchyLevel" | "Percentile" | "Unresolved"
-    table: Optional[str]
+    table: str | None
     field: str
 
 

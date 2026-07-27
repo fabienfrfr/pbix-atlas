@@ -33,14 +33,16 @@ class NodeQuery(BaseModel):
 class TreeQuery(BaseModel):
     pbix_path: str
     node_id: str
-    direction: str = Field(default="downstream", description="'downstream' (toward the display) or 'upstream' (toward the source)")
+    direction: str = Field(
+        default="downstream", description="'downstream' (toward the display) or 'upstream' (toward the source)"
+    )
     max_depth: int = 12
 
 
 class TreeNode(BaseModel):
     id: str
     type: str
-    children: list["TreeNode"] = []
+    children: list[TreeNode] = []
 
 
 TreeNode.model_rebuild()
@@ -62,7 +64,7 @@ class CodegenRequest(BaseModel):
     output_path: str = Field(
         default="",
         description="Where to write the generated .py file. Defaults to "
-                     "'<pbix name>_pipeline.py' next to the input file.",
+        "'<pbix name>_pipeline.py' next to the input file.",
     )
 
 
@@ -70,5 +72,5 @@ class CodegenResponse(BaseModel):
     output_path: str
     stats: dict[str, int] = Field(
         description="Coverage counters: translated vs. TODO for M steps and DAX measures, "
-                     "and how many visuals were mapped to a Vizro component vs. skipped."
+        "and how many visuals were mapped to a Vizro component vs. skipped."
     )

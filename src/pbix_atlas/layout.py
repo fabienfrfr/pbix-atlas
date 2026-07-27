@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import json
 import zipfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional
 
 from .models import VisualFieldUsage
 
@@ -38,9 +38,7 @@ class ReportLayoutParser:
 
                 visual_type = single_visual.get("visualType", "unknown")
                 proto_query = single_visual.get("prototypeQuery", {})
-                alias_to_entity = {
-                    f.get("Name"): f.get("Entity") for f in proto_query.get("From", [])
-                }
+                alias_to_entity = {f.get("Name"): f.get("Entity") for f in proto_query.get("From", [])}
 
                 for item in proto_query.get("Select", []):
                     kind, table, field = self._resolve_select_item(item, alias_to_entity)
@@ -53,9 +51,7 @@ class ReportLayoutParser:
                         field=field,
                     )
 
-    def _resolve_select_item(
-        self, item: dict, alias_to_entity: dict[str, str]
-    ) -> tuple[str, Optional[str], str]:
+    def _resolve_select_item(self, item: dict, alias_to_entity: dict[str, str]) -> tuple[str, str | None, str]:
         node = item
         for _ in range(3):  # bounded nesting depth (Aggregation/HierarchyLevel)
             if "Aggregation" in node:

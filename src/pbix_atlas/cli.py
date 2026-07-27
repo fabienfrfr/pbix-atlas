@@ -21,7 +21,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("pbix_path", type=Path, help="Path to the input .pbix file")
     parser.add_argument(
-        "-o", "--output", type=Path, default=None,
+        "-o",
+        "--output",
+        type=Path,
+        default=None,
         help="Output .py path (default: <pbix name>_pipeline.py next to the input file)",
     )
     args = parser.parse_args(argv)

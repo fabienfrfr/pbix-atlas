@@ -7,6 +7,7 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
+    import json
 
     from pbix_atlas import (
         LineageGraphBuilder,
@@ -18,6 +19,7 @@ def _():
         graph_summary,
         print_tree,
         upstream,
+        get_level,
     )
 
     return (

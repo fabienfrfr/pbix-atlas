@@ -62,7 +62,8 @@ def test_table_rename_select_sort_distinct():
     env.set("Source", table)
 
     renamed = interp.eval(
-        parse_m_expression('Table.RenameColumns(Source, {{"A", "Z"}})'), env,
+        parse_m_expression('Table.RenameColumns(Source, {{"A", "Z"}})'),
+        env,
     )
     assert list(renamed.df.columns) == ["Z", "B"]
 
@@ -79,13 +80,15 @@ def test_nested_join_and_expand():
     env.set("R", right)
 
     joined = interp.eval(
-        parse_m_expression('Table.NestedJoin(L, {"Key"}, R, {"Key"}, "Joined", JoinKind.LeftOuter)'), env,
+        parse_m_expression('Table.NestedJoin(L, {"Key"}, R, {"Key"}, "Joined", JoinKind.LeftOuter)'),
+        env,
     )
     env.set("Joined", joined)
     expanded = interp.eval(
-        parse_m_expression('Table.ExpandTableColumn(Joined, "Joined", {"Value"}, {"Value"})'), env,
+        parse_m_expression('Table.ExpandTableColumn(Joined, "Joined", {"Value"}, {"Value"})'),
+        env,
     )
-    result = dict(zip(expanded.df["Key"], expanded.df["Value"]))
+    result = dict(zip(expanded.df["Key"], expanded.df["Value"], strict=False))
     assert result[1] == "one"
     assert result[2] == "two"
     assert pd.isna(result[3])
@@ -102,9 +105,10 @@ def test_group_by_with_aggregation():
         ),
         env,
     )
-    # NOTE: [Val] inside the group aggregator refers to the sub-table's column,
-    # accessed through row-context sugar isn't valid here - use direct table ref instead
-    assert set(grouped.df.columns) >= {"Cat"}
+    assert set(grouped.df.columns) >= {"Cat", "Total"}
+    totals = dict(zip(grouped.df["Cat"], grouped.df["Total"], strict=False))
+    assert totals["a"] == 3
+    assert totals["b"] == 3
 
 
 def test_replace_value_with_custom_function():
@@ -114,8 +118,8 @@ def test_replace_value_with_custom_function():
     env.set("Source", table)
     replaced = interp.eval(
         parse_m_expression(
-            'Table.ReplaceValue(Source, each [A] = null, null, '
-            "(current, isMatch, newVal) => if isMatch then -1 else current, {\"A\"})",
+            "Table.ReplaceValue(Source, each [A] = null, null, "
+            '(current, isMatch, newVal) => if isMatch then -1 else current, {"A"})',
         ),
         env,
     )

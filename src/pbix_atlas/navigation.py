@@ -25,9 +25,7 @@ def downstream(graph: nx.DiGraph, node: str, include_relationships: bool = False
 
 
 def _without_relationships(graph: nx.DiGraph) -> nx.DiGraph:
-    edges_to_drop = [
-        (u, v) for u, v, d in graph.edges(data=True) if d.get("type") == EdgeType.RELATES_TO.value
-    ]
+    edges_to_drop = [(u, v) for u, v, d in graph.edges(data=True) if d.get("type") == EdgeType.RELATES_TO.value]
     if not edges_to_drop:
         return graph
     g2 = graph.copy()

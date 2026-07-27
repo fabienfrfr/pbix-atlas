@@ -44,6 +44,7 @@ class PythonPipelineGenerator:
         """More readable than GraphML: `operation`/`body` are nested JSON
         objects here (GraphML flattens them to strings out of necessity)."""
         import json
+
         data = nx.node_link_data(self.graph, edges="edges")
         for node in data["nodes"]:
             for key in ("operation", "body"):
@@ -65,7 +66,8 @@ class PythonPipelineGenerator:
         import json
 
         from .m_parser import ast_from_dict
-        from .m_transpile import MTranspiler, _safe_name as t_safe_name
+        from .m_transpile import MTranspiler
+        from .m_transpile import _safe_name as t_safe_name
 
         transpiler = MTranspiler()
         blocks: list[str] = []
@@ -78,7 +80,7 @@ class PythonPipelineGenerator:
 
             if body_json is None:
                 blocks.append(f'def {fn}(model):\n    """"{name}": could not be parsed."""\n    return None\n')
-                build_calls.append(f'model[{name!r}] = {fn}(model)')
+                build_calls.append(f"model[{name!r}] = {fn}(model)")
                 continue
 
             steps = sorted(
@@ -89,7 +91,7 @@ class PythonPipelineGenerator:
             lines: list[str] = []
             for s in steps:
                 op_ast = ast_from_dict(json.loads(s["operation"]))
-                lines.append(f'{t_safe_name(s["label"])} = {transpiler.expr(op_ast, scope)}  # step: {s["label"]!r}')
+                lines.append(f"{t_safe_name(s['label'])} = {transpiler.expr(op_ast, scope)}  # step: {s['label']!r}")
                 scope.add(s["label"])
             return_expr = transpiler.expr(ast_from_dict(json.loads(body_json)), scope)
 
@@ -97,7 +99,7 @@ class PythonPipelineGenerator:
             blocks.append(
                 f'def {fn}(model):\n    """Reproduces query "{name}"."""\n    {body}\n    return {return_expr}\n'
             )
-            build_calls.append(f'model[{name!r}] = {fn}(model)')
+            build_calls.append(f"model[{name!r}] = {fn}(model)")
         return "\n\n".join(blocks), build_calls
 
     def _measures_code(self) -> str:
@@ -107,7 +109,7 @@ class PythonPipelineGenerator:
             '    """DAX measures, translated where a safe automatic mapping exists',
             "    (aggregations, DIVIDE, simple measure references). Anything else",
             "    raises MeasureNotSupported at call time - naming the exact measure",
-            '    and its original DAX, rather than silently returning a wrong number.',
+            "    and its original DAX, rather than silently returning a wrong number.",
             '    """',
             "    measures: dict = {}",
         ]
@@ -147,18 +149,18 @@ class PythonPipelineGenerator:
             var = f"page_{idx}"
             page_vars.append(var)
             joined = ",\n        ".join(components)
-            page_blocks.append(f'{var} = vm.Page(\n    title={page!r},\n    components=[\n        {joined}\n    ],\n)')
+            page_blocks.append(f"{var} = vm.Page(\n    title={page!r},\n    components=[\n        {joined}\n    ],\n)")
 
         body = "\n\n".join(page_blocks)
         summary = (
-            f'# {skipped["count"]} visual(s) not mapped to a Vizro component on purpose: '
+            f"# {skipped['count']} visual(s) not mapped to a Vizro component on purpose: "
             f"multi-table charts (join logic is model-specific), custom visuals "
             f"(Deneb/HTML), images, shapes and slicers are skipped rather than guessed."
         )
         pages = ", ".join(page_vars)
         return f"{body}\n\n{summary}\ndashboard = vm.Dashboard(pages=[{pages}])\n"
 
-    def _visual_component(self, spec, skipped: dict) -> str | None:
+    def _visual_component(self, spec, skipped: dict) -> str | None:  # noqa: PLR0911
         gtype = spec.generic_type
         comp_id = f"{_safe_name(spec.page)}_{spec.visual_index}"
         tables = {t for fields in spec.roles.values() for (t, _f, _k) in fields if t}
@@ -327,16 +329,15 @@ def _compute_stats(code: str, graph) -> dict[str, int]:
         "measures_translated": len(re.findall(r"measures\[\([^)]+\)\] = (?!MeasureNotSupported)", code)),
         "measures_unsupported": len(re.findall(r"MeasureNotSupported\(", code)),
         "visuals_mapped": (
-            len(re.findall(r"vm\.Graph\(", code)) + len(re.findall(r"vm\.Card\(", code))
+            len(re.findall(r"vm\.Graph\(", code))
+            + len(re.findall(r"vm\.Card\(", code))
             + len(re.findall(r"vm\.Table\(", code))
         ),
         "visuals_skipped": int(m.group(1)) if (m := re.search(r"# (\d+) visual\(s\) not mapped", code)) else 0,
     }
 
 
-def generate_python_pipeline_with_stats(
-    pbix_path: str | Path, output_path: str | Path
-) -> tuple[Path, dict[str, int]]:
+def generate_python_pipeline_with_stats(pbix_path: str | Path, output_path: str | Path) -> tuple[Path, dict[str, int]]:
     output_path = Path(output_path)
     graphml_path = output_path.with_suffix(".graphml")
     gen = PythonPipelineGenerator(pbix_path)

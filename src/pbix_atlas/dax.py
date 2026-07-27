@@ -13,7 +13,4 @@ class DaxReferenceParser:
     def parse(self, expression: str) -> list[DaxReference]:
         if not expression:
             return []
-        return [
-            DaxReference(table=m.group(1) or m.group(2), name=m.group(3))
-            for m in self._REF.finditer(expression)
-        ]
+        return [DaxReference(table=m.group(1) or m.group(2), name=m.group(3)) for m in self._REF.finditer(expression)]

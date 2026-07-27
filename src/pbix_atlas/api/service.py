@@ -84,9 +84,7 @@ class LineageGraphCache:
         the cached graph (codegen re-reads the .pbix directly), kept as its
         own method purely so the API surface stays symmetrical with the
         lineage-graph endpoints above."""
-        out = Path(output_path) if output_path else Path(pbix_path).with_name(
-            f"{Path(pbix_path).stem}_pipeline.py"
-        )
+        out = Path(output_path) if output_path else Path(pbix_path).with_name(f"{Path(pbix_path).stem}_pipeline.py")
         out.parent.mkdir(parents=True, exist_ok=True)
         written_path, stats = generate_python_pipeline_with_stats(pbix_path, out)
         return {"output_path": str(written_path), "stats": stats}

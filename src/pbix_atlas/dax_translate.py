@@ -1,13 +1,3 @@
-"""Best-effort translation of DAX measure/calculated-column expressions into
-plain Python (pandas) code.
-
-This is NOT a DAX engine. It recognizes a curated subset of common patterns
-(simple aggregations, DIVIDE, IF, RELATED, basic arithmetic between measure
-references) and emits an equivalent Python expression. Anything it does not
-recognize is reported as unsupported so the code generator can emit an
-explicit TODO stub instead of silently producing a wrong result.
-"""
-
 from __future__ import annotations
 
 import re
@@ -42,15 +32,12 @@ _SIMPLE_AGG = re.compile(
     re.IGNORECASE,
 )
 _COUNTROWS = re.compile(r"^\s*COUNTROWS\s*\(\s*" + _TABLE_REF + r"\s*\)\s*$", re.IGNORECASE)
-_DISTINCTCOUNT = re.compile(
-    r"^\s*DISTINCTCOUNT\s*\(\s*" + _TABLE_REF + r"\[([^\]]+)\]\s*\)\s*$", re.IGNORECASE
-)
+_DISTINCTCOUNT = re.compile(r"^\s*DISTINCTCOUNT\s*\(\s*" + _TABLE_REF + r"\[([^\]]+)\]\s*\)\s*$", re.IGNORECASE)
 _DIVIDE = re.compile(r"^\s*DIVIDE\s*\((.+)\)\s*$", re.IGNORECASE | re.DOTALL)
 
 
 def _table_var(table: str) -> str:
-    safe = re.sub(r"[^0-9A-Za-z_]", "_", table)
-    return f"model[{table!r}]" if False else f"model[\"{table}\"]"
+    return f'model["{table}"]'
 
 
 def _split_top_level_args(text: str) -> list[str]:
@@ -81,12 +68,10 @@ def _split_top_level_args(text: str) -> list[str]:
 
 
 class DaxTranslator:
-    """Translates a single DAX expression to a Python snippet, best-effort."""
-
     def __init__(self) -> None:
         self._ref_parser = DaxReferenceParser()
 
-    def translate(self, expr: str, default_table: str) -> DaxTranslation:
+    def translate(self, expr: str, default_table: str) -> DaxTranslation:  # noqa: PLR0911
         expr = expr.strip()
         tables: set[str] = set()
 
@@ -119,7 +104,7 @@ class DaxTranslator:
                 if all(s.supported for s in sub):
                     tables |= sub[0].referenced_tables | sub[1].referenced_tables
                     alt = "0"
-                    if len(args) == 3:
+                    if len(args) == 3:  # noqa: PLR2004
                         sub_alt = self.translate(args[2], default_table)
                         if sub_alt.supported:
                             alt = sub_alt.python_expr
@@ -130,11 +115,9 @@ class DaxTranslator:
                         tables,
                     )
 
-        # Bare numeric literal
         if re.match(r"^-?\d+(\.\d+)?$", expr):
             return DaxTranslation(expr, True, tables)
 
-        # Bare reference to another measure/column, e.g. `[Other Measure]` or `Table[Col]`
         refs = self._ref_parser.parse(expr)
         if len(refs) == 1 and expr.strip() in (
             f"[{refs[0].name}]",

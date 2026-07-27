@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 import networkx as nx
 
@@ -25,10 +24,10 @@ from .sources import SourceDetectorRegistry, normalize_source_identifier
 class LineageGraphBuilder:
     def __init__(
         self,
-        source_registry: Optional[SourceDetectorRegistry] = None,
-        dax_parser: Optional[DaxReferenceParser] = None,
-        m_resolver: Optional[MQueryDependencyResolver] = None,
-        layout_parser: Optional[ReportLayoutParser] = None,
+        source_registry: SourceDetectorRegistry | None = None,
+        dax_parser: DaxReferenceParser | None = None,
+        m_resolver: MQueryDependencyResolver | None = None,
+        layout_parser: ReportLayoutParser | None = None,
     ):
         self.source_registry = source_registry or SourceDetectorRegistry()
         self.dax_parser = dax_parser or DaxReferenceParser()
@@ -74,7 +73,7 @@ class LineageGraphBuilder:
             # code generator reads this and produces Python from it.
             try:
                 ast = parse_m_expression(expr)
-            except Exception:  # noqa: BLE001 - keep the query node even if parsing fails
+            except Exception:
                 g.nodes[qid]["body"] = None
                 continue
 
@@ -85,8 +84,12 @@ class LineageGraphBuilder:
                 func = step_expr.func.name if hasattr(step_expr, "func") and hasattr(step_expr.func, "name") else ""
                 step_id = f"{qid}::{step_name}"
                 g.add_node(
-                    step_id, type="step", label=step_name, function=func,
-                    operation=json.dumps(ast_to_dict(step_expr)), order=order,
+                    step_id,
+                    type="step",
+                    label=step_name,
+                    function=func,
+                    operation=json.dumps(ast_to_dict(step_expr)),
+                    order=order,
                 )
                 g.add_edge(qid, step_id, type="contains")
                 if prev_id:
@@ -157,8 +160,8 @@ class LineageGraphBuilder:
         ref: DaxReference,
         default_table: str,
         column_lookup: dict[tuple[str, str], str],
-        measure_lookup: Optional[dict[tuple[str, str], str]] = None,
-    ) -> Optional[str]:
+        measure_lookup: dict[tuple[str, str], str] | None = None,
+    ) -> str | None:
         measure_lookup = measure_lookup or {}
 
         if ref.table:
@@ -178,9 +181,7 @@ class LineageGraphBuilder:
 
         return None
 
-    def _add_relationships(
-        self, g: nx.DiGraph, model: PBIXModel, column_lookup: dict[tuple[str, str], str]
-    ) -> None:
+    def _add_relationships(self, g: nx.DiGraph, model: PBIXModel, column_lookup: dict[tuple[str, str], str]) -> None:
         for _, row in model.relationships().iterrows():
             from_id = column_lookup.get((str(row["FromTableName"]), str(row["FromColumnName"])))
             to_id = column_lookup.get((str(row["ToTableName"]), str(row["ToColumnName"])))

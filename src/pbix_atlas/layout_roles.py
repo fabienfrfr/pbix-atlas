@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Optional
 
 _FIELD_KEYS = ("Column", "Measure", "HierarchyLevel", "Percentile")
 
@@ -44,9 +43,9 @@ class VisualSpec:
     page: str
     visual_index: int
     visual_type: str
-    generic_type: Optional[str]  # entry from VISUAL_TYPE_MAP, or None if unmapped
+    generic_type: str | None  # entry from VISUAL_TYPE_MAP, or None if unmapped
     # role -> list of (table, field, field_kind)
-    roles: dict[str, list[tuple[Optional[str], str, str]]] = field(default_factory=dict)
+    roles: dict[str, list[tuple[str | None, str, str]]] = field(default_factory=dict)
     filters: list[dict] = field(default_factory=list)
 
 
@@ -56,7 +55,7 @@ class PageFilters:
     filters: list[dict] = field(default_factory=list)
 
 
-def _resolve_item(item: dict, alias_to_entity: dict[str, str]) -> tuple[str, Optional[str], str]:
+def _resolve_item(item: dict, alias_to_entity: dict[str, str]) -> tuple[str, str | None, str]:
     node = item
     for _ in range(3):
         if "Aggregation" in node:
@@ -72,7 +71,7 @@ def _resolve_item(item: dict, alias_to_entity: dict[str, str]) -> tuple[str, Opt
     return "Unresolved", None, item.get("Name", "?")
 
 
-def _parse_filter_blob(raw) -> Optional[dict]:
+def _parse_filter_blob(raw) -> dict | None:
     """A filters entry is either a JSON string or already a dict, depending on
     the Power BI Desktop version that wrote the file."""
     try:
@@ -116,12 +115,12 @@ def extract_visual_specs(layout: dict) -> list[VisualSpec]:
             alias_to_entity = {f.get("Name"): f.get("Entity") for f in proto.get("From", [])}
 
             # queryRef -> (kind, table, field), so projections can be matched back
-            queryref_to_field: dict[str, tuple[str, Optional[str], str]] = {}
+            queryref_to_field: dict[str, tuple[str, str | None, str]] = {}
             for item in proto.get("Select", []):
                 kind, table, field_name = _resolve_item(item, alias_to_entity)
                 queryref_to_field[item.get("Name", "")] = (kind, table, field_name)
 
-            roles: dict[str, list[tuple[Optional[str], str, str]]] = {}
+            roles: dict[str, list[tuple[str | None, str, str]]] = {}
             for role, entries in sv.get("projections", {}).items():
                 for entry in entries:
                     qref = entry.get("queryRef", "")
