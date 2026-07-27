@@ -8,6 +8,7 @@ swapped without touching the rest (dependency inversion).
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Optional
 
@@ -57,14 +58,40 @@ class LineageGraphBuilder:
         return g
 
     def _add_sources_and_queries(self, g: nx.DiGraph, queries: dict[str, str]) -> None:
+        from .m_parser import LetExpr, ast_to_dict, parse_m_expression
+
         for name, expr in queries.items():
             qid = node_id(NodeType.QUERY, name)
-            g.add_node(qid, type=NodeType.QUERY.value, label=name, m_source=expr)
+            g.add_node(qid, type=NodeType.QUERY.value, label=name)
 
             for ref in self.source_registry.detect(expr):
                 sid = node_id(NodeType.SOURCE, ref.system, normalize_source_identifier(ref))
                 g.add_node(sid, type=NodeType.SOURCE.value, label=ref.identifier, system=ref.system)
                 g.add_edge(sid, qid, type=EdgeType.FEEDS.value)
+
+            # Each step node carries its operation as a structured tree
+            # (function + arguments, JSON-safe) - not generated code. The
+            # code generator reads this and produces Python from it.
+            try:
+                ast = parse_m_expression(expr)
+            except Exception:  # noqa: BLE001 - keep the query node even if parsing fails
+                g.nodes[qid]["body"] = None
+                continue
+
+            is_let = isinstance(ast, LetExpr)
+            g.nodes[qid]["body"] = json.dumps(ast_to_dict(ast.body if is_let else ast))
+            prev_id = None
+            for order, (step_name, step_expr) in enumerate(ast.steps if is_let else []):
+                func = step_expr.func.name if hasattr(step_expr, "func") and hasattr(step_expr.func, "name") else ""
+                step_id = f"{qid}::{step_name}"
+                g.add_node(
+                    step_id, type="step", label=step_name, function=func,
+                    operation=json.dumps(ast_to_dict(step_expr)), order=order,
+                )
+                g.add_edge(qid, step_id, type="contains")
+                if prev_id:
+                    g.add_edge(prev_id, step_id, type=EdgeType.FEEDS.value)
+                prev_id = step_id
 
     def _add_query_dependencies(self, g: nx.DiGraph, queries: dict[str, str]) -> None:
         deps_graph = self.m_resolver.resolve(queries)

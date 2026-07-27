@@ -1,13 +1,6 @@
-"""Public, readable pandas operations backing the code the generator emits.
-
-Each function here mirrors one M standard-library function (`Table.*`,
-`List.*`, `Text.*`, ...), taking plain Python values/callables - not the
-interpreter's internal `MFunction`/`Env` machinery from `m_interpreter.py`.
-Generated pipelines call these directly, e.g.:
-
+"""Pandas helpers mirroring M's stdlib (`Table.*`, `List.*`, `Text.*`, ...).
+Called directly from generated pipelines, e.g.:
     df = m_ops.table_select_rows(df, lambda row: row["Amount"] > 0)
-
-which reads like plain pandas rather than an opaque interpreter call.
 """
 
 from __future__ import annotations

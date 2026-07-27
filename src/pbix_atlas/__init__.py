@@ -21,6 +21,7 @@ The returned graph is a standard ``networkx.DiGraph``.
 from .codegen import PythonPipelineGenerator, generate_python_pipeline
 from .dax import DaxReferenceParser
 from .graph_builder import LineageGraphBuilder
+from .levels import get_level, list_sources
 from .layout import ReportLayoutParser
 from .models import DaxReference, EdgeType, NodeType, SourceRef, VisualFieldUsage, node_id
 from .mquery import MQueryDependencyResolver

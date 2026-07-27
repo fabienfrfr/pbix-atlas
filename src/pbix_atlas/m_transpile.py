@@ -1,6 +1,4 @@
-"""Transpiles a parsed M AST (`m_parser`) into readable Python source calling
-`m_ops` - not an AST blob, not raw M text re-parsed at runtime.
-"""
+"""Transpiles a parsed M AST into readable Python source calling `m_ops`."""
 
 from __future__ import annotations
 

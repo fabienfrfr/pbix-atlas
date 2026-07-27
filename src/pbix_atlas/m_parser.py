@@ -12,6 +12,7 @@ owning correctness.
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from typing import Optional, Union
 
@@ -458,3 +459,35 @@ class MParser:
 
 def parse_m_expression(text: str) -> MNode:
     return MParser(text).parse_program()
+
+
+# --------------------------------------------------------------- JSON (de)serialization
+# The graph stores *this* - a structured operation tree - never generated code.
+_NODE_CLASSES = {
+    cls.__name__: cls for cls in
+    (Lit, Ident, FieldAccess, ItemAccess, Invoke, Lambda, If, BinOp, UnaryOp,
+     ListExpr, RecordExpr, LetExpr, TryExpr, TypeLit)
+}
+
+
+def ast_to_dict(node):
+    """MNode -> plain JSON-safe dict/list/primitive. Reversible via `ast_from_dict`."""
+    if type(node).__name__ in _NODE_CLASSES:
+        d = {"_": type(node).__name__}
+        for f in dataclasses.fields(node):
+            d[f.name] = ast_to_dict(getattr(node, f.name))
+        return d
+    if isinstance(node, (list, tuple)):
+        return [ast_to_dict(x) for x in node]
+    return node  # str / int / float / bool / None
+
+
+def ast_from_dict(d):
+    """Inverse of `ast_to_dict`."""
+    if isinstance(d, dict) and "_" in d:
+        cls = _NODE_CLASSES[d["_"]]
+        kwargs = {f.name: ast_from_dict(d[f.name]) for f in dataclasses.fields(cls)}
+        return cls(**kwargs)
+    if isinstance(d, list):
+        return [ast_from_dict(x) for x in d]
+    return d
