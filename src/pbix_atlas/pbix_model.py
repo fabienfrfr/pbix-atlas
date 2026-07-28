@@ -9,7 +9,10 @@ from pbixray import PBIXRay
 
 
 class PBIXModel:
+    """PBIXModel (see attributes/methods below)."""
+
     def __init__(self, pbix_path: str | Path):
+        """Initialize."""
         self.path = Path(pbix_path)
         self._ray = PBIXRay(str(self.path))
 
@@ -23,13 +26,17 @@ class PBIXModel:
         return queries
 
     def schema_columns(self) -> pd.DataFrame:
+        """Schema columns."""
         return self._ray.schema[["TableName", "ColumnName"]]
 
     def calculated_columns(self) -> pd.DataFrame:
+        """Calculated columns."""
         return self._ray.dax_columns
 
     def measures(self) -> pd.DataFrame:
+        """Measures."""
         return self._ray.dax_measures
 
     def relationships(self) -> pd.DataFrame:
+        """Relationships."""
         return self._ray.relationships

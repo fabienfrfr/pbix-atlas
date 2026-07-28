@@ -35,8 +35,8 @@ print_tree(graph, "source::odata::example.com/odata/", direction="downstream")
 ```python
 from pbix_atlas import export_graphml, export_nodes_csv, export_edges_csv, graph_summary
 
-graph_summary(graph)                       # {'query': 70, 'column': 183, ...}
-export_graphml(graph, "lineage.graphml")   # Gephi / yEd
+graph_summary(graph)  # {'query': 70, 'column': 183, ...}
+export_graphml(graph, "lineage.graphml")  # Gephi / yEd
 export_nodes_csv(graph, "nodes.csv")
 export_edges_csv(graph, "edges.csv")
 ```
@@ -52,6 +52,7 @@ pbix-atlas-codegen my_report.pbix -o pipeline.py
 
 ```python
 from pbix_atlas import generate_python_pipeline
+
 generate_python_pipeline("my_report.pbix", "pipeline.py")
 ```
 

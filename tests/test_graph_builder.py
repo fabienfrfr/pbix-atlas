@@ -13,15 +13,9 @@ def _mock_model():
     model.queries.return_value = {
         "Q1": 'let Source = Csv.Document("http://example.com/data.csv") in Source',
     }
-    model.schema_columns.return_value = pd.DataFrame(
-        {"TableName": ["Q1"], "ColumnName": ["Col1"]}
-    )
-    model.calculated_columns.return_value = pd.DataFrame(
-        {"TableName": [], "ColumnName": [], "Expression": []}
-    )
-    model.measures.return_value = pd.DataFrame(
-        {"TableName": [], "Name": [], "Expression": []}
-    )
+    model.schema_columns.return_value = pd.DataFrame({"TableName": ["Q1"], "ColumnName": ["Col1"]})
+    model.calculated_columns.return_value = pd.DataFrame({"TableName": [], "ColumnName": [], "Expression": []})
+    model.measures.return_value = pd.DataFrame({"TableName": [], "Name": [], "Expression": []})
     model.relationships.return_value = pd.DataFrame(
         {"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []}
     )
@@ -38,9 +32,15 @@ def _setup_build(requests):
         instance = MockModel.return_value
         instance.queries.return_value = requests.get("queries")
         instance.schema_columns.return_value = requests.get("schema", pd.DataFrame({"TableName": [], "ColumnName": []}))
-        instance.calculated_columns.return_value = requests.get("calc", pd.DataFrame({"TableName": [], "ColumnName": [], "Expression": []}))
-        instance.measures.return_value = requests.get("measures", pd.DataFrame({"TableName": [], "Name": [], "Expression": []}))
-        instance.relationships.return_value = requests.get("rels", pd.DataFrame({"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []}))
+        instance.calculated_columns.return_value = requests.get(
+            "calc", pd.DataFrame({"TableName": [], "ColumnName": [], "Expression": []})
+        )
+        instance.measures.return_value = requests.get(
+            "measures", pd.DataFrame({"TableName": [], "Name": [], "Expression": []})
+        )
+        instance.relationships.return_value = requests.get(
+            "rels", pd.DataFrame({"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []})
+        )
         yield builder
     return
 
@@ -53,7 +53,9 @@ def test_build_basic(builder):
         instance.schema_columns.return_value = pd.DataFrame({"TableName": ["Q1"], "ColumnName": ["Col1"]})
         instance.calculated_columns.return_value = pd.DataFrame({"TableName": [], "ColumnName": [], "Expression": []})
         instance.measures.return_value = pd.DataFrame({"TableName": [], "Name": [], "Expression": []})
-        instance.relationships.return_value = pd.DataFrame({"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []})
+        instance.relationships.return_value = pd.DataFrame(
+            {"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []}
+        )
 
         g = builder.build("/fake/report.pbix")
 
@@ -73,7 +75,9 @@ def test_build_with_calculated_columns(builder):
             {"TableName": ["Q1"], "ColumnName": ["CalcCol"], "Expression": ["SUM(Q1[Col1])"]}
         )
         instance.measures.return_value = pd.DataFrame({"TableName": [], "Name": [], "Expression": []})
-        instance.relationships.return_value = pd.DataFrame({"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []})
+        instance.relationships.return_value = pd.DataFrame(
+            {"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []}
+        )
 
         g = builder.build("/fake/report.pbix")
 
@@ -90,7 +94,9 @@ def test_build_with_measures(builder):
         instance.measures.return_value = pd.DataFrame(
             {"TableName": ["Q1"], "Name": ["Total"], "Expression": ["SUM(Q1[Col1])"]}
         )
-        instance.relationships.return_value = pd.DataFrame({"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []})
+        instance.relationships.return_value = pd.DataFrame(
+            {"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []}
+        )
 
         g = builder.build("/fake/report.pbix")
 
@@ -102,9 +108,7 @@ def test_build_with_relationships(builder):
     with patch("pbix_atlas.graph_builder.PBIXModel") as MockModel:
         instance = MockModel.return_value
         instance.queries.return_value = {}
-        instance.schema_columns.return_value = pd.DataFrame(
-            {"TableName": ["T1", "T2"], "ColumnName": ["Key", "Key"]}
-        )
+        instance.schema_columns.return_value = pd.DataFrame({"TableName": ["T1", "T2"], "ColumnName": ["Key", "Key"]})
         instance.calculated_columns.return_value = pd.DataFrame({"TableName": [], "ColumnName": [], "Expression": []})
         instance.measures.return_value = pd.DataFrame({"TableName": [], "Name": [], "Expression": []})
         instance.relationships.return_value = pd.DataFrame(
@@ -125,7 +129,9 @@ def test_build_no_layout(builder):
         instance.schema_columns.return_value = pd.DataFrame({"TableName": [], "ColumnName": []})
         instance.calculated_columns.return_value = pd.DataFrame({"TableName": [], "ColumnName": [], "Expression": []})
         instance.measures.return_value = pd.DataFrame({"TableName": [], "Name": [], "Expression": []})
-        instance.relationships.return_value = pd.DataFrame({"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []})
+        instance.relationships.return_value = pd.DataFrame(
+            {"FromTableName": [], "FromColumnName": [], "ToTableName": [], "ToColumnName": []}
+        )
 
         g = builder.build("/fake/report.pbix")
     assert g is not None
@@ -150,9 +156,7 @@ def test_resolve_dax_reference(builder):
 
 def test_add_unresolved_dax_ref(builder):
     g = nx.DiGraph()
-    builder._add_unresolved_dax_ref(
-        g, DaxReference(table="T", name="Missing"), default_table="T", dependent_id="mid"
-    )
+    builder._add_unresolved_dax_ref(g, DaxReference(table="T", name="Missing"), default_table="T", dependent_id="mid")
     assert g.has_node("unresolved::T::Missing")
     assert len(list(g.edges())) == 1
 
@@ -172,7 +176,9 @@ def test_add_inferred_columns(builder):
     g = nx.DiGraph()
     g.add_node("query::Staging", type=NodeType.QUERY.value, label="Staging")
     g.add_node(
-        "query::Staging::step1", type="step", label="step1",
+        "query::Staging::step1",
+        type="step",
+        label="step1",
         operation='{"_":"Invoke","func":{"_":"Ident","name":"Csv.Document"},"args":[{"_":"Lit","value":"url"}]}',
         order=0,
     )
@@ -199,14 +205,13 @@ def test_add_visual_fields(builder):
         ]
     }
     builder._add_visual_fields(
-        g, layout, "report.pbix",
+        g,
+        layout,
+        "report.pbix",
         {("T", "Col1"): "column::T::Col1"},
         {},
     )
-    assert any(
-        d.get("type") == NodeType.VISUAL_FIELD.value
-        for _, d in g.nodes(data=True)
-    )
+    assert any(d.get("type") == NodeType.VISUAL_FIELD.value for _, d in g.nodes(data=True))
 
 
 def test_add_visual_fields_unresolved(builder):

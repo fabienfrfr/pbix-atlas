@@ -1,3 +1,5 @@
+"""M parser."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -7,45 +9,61 @@ from .m_lexer import Token, TokType, tokenize
 
 
 class MParseError(Exception):
+    """MParseError (see attributes/methods below)."""
+
     pass
 
 
 @dataclass
 class Lit:
+    """Lit (see attributes/methods below)."""
+
     value: object
 
 
 @dataclass
 class Ident:
+    """Ident (see attributes/methods below)."""
+
     name: str
 
 
 @dataclass
 class FieldAccess:
+    """FieldAccess (see attributes/methods below)."""
+
     target: MNode
     field: str
 
 
 @dataclass
 class ItemAccess:
+    """ItemAccess (see attributes/methods below)."""
+
     target: MNode
     index: MNode
 
 
 @dataclass
 class Invoke:
+    """Invoke (see attributes/methods below)."""
+
     func: MNode
     args: list[MNode]
 
 
 @dataclass
 class Lambda:
+    """Lambda (see attributes/methods below)."""
+
     params: list[str]
     body: MNode
 
 
 @dataclass
 class If:
+    """If (see attributes/methods below)."""
+
     cond: MNode
     then_: MNode
     else_: MNode
@@ -53,6 +71,8 @@ class If:
 
 @dataclass
 class BinOp:
+    """BinOp (see attributes/methods below)."""
+
     op: str
     left: MNode
     right: MNode
@@ -60,34 +80,46 @@ class BinOp:
 
 @dataclass
 class UnaryOp:
+    """UnaryOp (see attributes/methods below)."""
+
     op: str
     expr: MNode
 
 
 @dataclass
 class ListExpr:
+    """ListExpr (see attributes/methods below)."""
+
     items: list[MNode]
 
 
 @dataclass
 class RecordExpr:
+    """RecordExpr (see attributes/methods below)."""
+
     fields: list[tuple[str, MNode]]
 
 
 @dataclass
 class LetExpr:
+    """LetExpr (see attributes/methods below)."""
+
     steps: list[tuple[str, MNode]]
     body: MNode
 
 
 @dataclass
 class TryExpr:
+    """TryExpr (see attributes/methods below)."""
+
     expr: MNode
     otherwise: MNode | None
 
 
 @dataclass
 class TypeLit:
+    """TypeLit (see attributes/methods below)."""
+
     raw: str
 
 
@@ -128,7 +160,10 @@ _BIN_PRECEDENCE = {
 
 
 class MParser:
+    """MParser (see attributes/methods below)."""
+
     def __init__(self, text: str):
+        """Initialize."""
         self.text = text
         self.tokens = tokenize(text)
         self.i = 0
@@ -198,12 +233,14 @@ class MParser:
         return self._advance()
 
     def parse_program(self) -> MNode:
+        """Parse program."""
         node = self.parse_expr()
         if self._peek().type != TokType.EOF:
             raise MParseError(f"unexpected trailing tokens near {self._peek().value!r} (pos {self._peek().pos})")
         return node
 
     def parse_expr(self) -> MNode:
+        """Parse expr."""
         node = self._parse_binary(0)
         while self._check("meta"):
             self._advance()
@@ -229,6 +266,7 @@ class MParser:
         return left
 
     def parse_unary(self) -> MNode:
+        """Parse unary."""
         tok = self._peek()
         if tok.value in ("-", "+", "not") and tok.type in (TokType.OP, TokType.KEYWORD):
             self._advance()
@@ -236,6 +274,7 @@ class MParser:
         return self.parse_postfix()
 
     def parse_postfix(self) -> MNode:
+        """Parse postfix."""
         node = self.parse_primary()
         while True:
             if self._check("("):
@@ -271,6 +310,7 @@ class MParser:
         return args
 
     def parse_primary(self) -> MNode:  # noqa: PLR0911
+        """Parse primary."""
         tok = self._peek()
 
         if tok.type == TokType.NUMBER:
@@ -452,6 +492,7 @@ class MParser:
 
 
 def parse_m_expression(text: str) -> MNode:
+    """Parse m expression. Takes `text`."""
     return MParser(text).parse_program()
 
 
@@ -477,6 +518,7 @@ _NODE_CLASSES = {
 
 
 def ast_to_dict(node):
+    """Ast to dict. Takes `node`."""
     if type(node).__name__ in _NODE_CLASSES:
         d = {"_": type(node).__name__}
         for f in dataclasses.fields(node):
@@ -488,6 +530,7 @@ def ast_to_dict(node):
 
 
 def ast_from_dict(d):
+    """Ast from dict. Takes `d`."""
     if isinstance(d, dict) and "_" in d:
         cls = _NODE_CLASSES[d["_"]]
         kwargs = {f.name: ast_from_dict(d[f.name]) for f in dataclasses.fields(cls)}

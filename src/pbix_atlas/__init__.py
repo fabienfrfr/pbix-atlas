@@ -1,3 +1,22 @@
+"""pbix-atlas: bidirectional data-lineage graph for Power BI (.pbix) files.
+
+Traces the full chain from a physical source (HTTP, OData, SQL, file...)
+through Power Query (M) transforms, into the semantic model (columns,
+calculated columns, DAX measures), and out to every field displayed in a
+report visual - and back again. Public surface:
+
+- `LineageGraphBuilder` builds a `networkx.DiGraph` from a `.pbix` path.
+- `upstream`/`downstream`/`find_nodes`/`print_tree`/`build_tree` navigate it.
+- `source_schema`/`print_source_schema`/`write_source_tree_report` describe
+  the source side (which tables/columns come from where).
+- `export_graphml`/`export_nodes_csv`/`export_edges_csv`/`export_json`
+  serialize the graph for external tools.
+- `generate_python_pipeline` (codegen) emits a standalone Python script that
+  reproduces the report end-to-end.
+
+See `pbix_atlas.api.app` for the HTTP/MCP server built on top of this.
+"""
+
 from .codegen import PythonPipelineGenerator, generate_python_pipeline
 from .dax import DaxReferenceParser
 from .graph_builder import LineageGraphBuilder
@@ -31,7 +50,7 @@ from .sources import (
     normalize_source_identifier,
 )
 
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "DaxReference",

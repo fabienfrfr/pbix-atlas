@@ -30,12 +30,16 @@ def _indent(code: str, spaces: int = 4) -> str:
 
 
 class PythonPipelineGenerator:
+    """PythonPipelineGenerator (see attributes/methods below)."""
+
     def __init__(self, pbix_path: str | Path):
+        """Initialize."""
         self.pbix_path = Path(pbix_path)
         self.graph = LineageGraphBuilder().build(self.pbix_path)
         self.dax_translator = DaxTranslator()
 
     def export_graphml(self, path: str | Path) -> Path:
+        """Export graphml. Takes `path`."""
         path = Path(path)
         nx.write_graphml(self.graph, path)
         return path
@@ -199,6 +203,7 @@ class PythonPipelineGenerator:
         return None
 
     def generate(self) -> str:
+        """Generate."""
         order = self._query_nodes_in_order()
         query_fn_code, build_calls = self._query_functions_code(order)
         measures_code = self._measures_code()
@@ -332,6 +337,7 @@ def _compute_stats(code: str, graph) -> dict[str, int]:
 
 
 def generate_python_pipeline_with_stats(pbix_path: str | Path, output_path: str | Path) -> tuple[Path, dict[str, int]]:
+    """Generate python pipeline with stats. Takes `pbix_path`, `output_path`."""
     output_path = Path(output_path)
     graphml_path = output_path.with_suffix(".graphml")
     gen = PythonPipelineGenerator(pbix_path)

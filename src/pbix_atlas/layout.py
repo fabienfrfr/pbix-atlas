@@ -15,15 +15,19 @@ from .models import VisualFieldUsage
 
 
 class ReportLayoutParser:
+    """ReportLayoutParser (see attributes/methods below)."""
+
     _FIELD_KEYS = ("Column", "Measure", "HierarchyLevel", "Percentile")
 
     def load_raw_layout(self, pbix_path: str | Path) -> dict:
+        """Load raw layout. Takes `pbix_path`."""
         with zipfile.ZipFile(pbix_path, "r") as z:
             raw = z.read("Report/Layout")
         text = raw.decode("utf-16-le", errors="ignore").lstrip("\ufeff")
         return json.loads(text)
 
     def iter_visual_fields(self, layout: dict) -> Iterable[VisualFieldUsage]:
+        """Iter visual fields. Takes `layout`."""
         for section in layout.get("sections", []):
             page = section.get("displayName") or section.get("name", "")
             for idx, vc in enumerate(section.get("visualContainers", [])):

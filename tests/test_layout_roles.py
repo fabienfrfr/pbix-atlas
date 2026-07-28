@@ -22,26 +22,28 @@ def test_extract_visual_specs_basic():
                 "displayName": "Page1",
                 "visualContainers": [
                     {
-                        "config": json.dumps({
-                            "singleVisual": {
-                                "visualType": "columnChart",
-                                "prototypeQuery": {
-                                    "From": [{"Name": "a", "Entity": "Sales"}],
-                                    "Select": [
-                                        {
-                                            "Name": "SumAmount",
-                                            "Measure": {
-                                                "Expression": {"SourceRef": {"Source": "a"}},
-                                                "Property": "Amount",
-                                            },
-                                        }
-                                    ],
-                                },
-                                "projections": {
-                                    "Category": [{"queryRef": "SumAmount"}],
-                                },
+                        "config": json.dumps(
+                            {
+                                "singleVisual": {
+                                    "visualType": "columnChart",
+                                    "prototypeQuery": {
+                                        "From": [{"Name": "a", "Entity": "Sales"}],
+                                        "Select": [
+                                            {
+                                                "Name": "SumAmount",
+                                                "Measure": {
+                                                    "Expression": {"SourceRef": {"Source": "a"}},
+                                                    "Property": "Amount",
+                                                },
+                                            }
+                                        ],
+                                    },
+                                    "projections": {
+                                        "Category": [{"queryRef": "SumAmount"}],
+                                    },
+                                }
                             }
-                        }),
+                        ),
                     }
                 ],
             }
@@ -64,13 +66,15 @@ def test_generic_type_none_for_unknown():
                 "displayName": "Page1",
                 "visualContainers": [
                     {
-                        "config": json.dumps({
-                            "singleVisual": {
-                                "visualType": "someCustomVisual",
-                                "prototypeQuery": {"From": [], "Select": []},
-                                "projections": {},
+                        "config": json.dumps(
+                            {
+                                "singleVisual": {
+                                    "visualType": "someCustomVisual",
+                                    "prototypeQuery": {"From": [], "Select": []},
+                                    "projections": {},
+                                }
                             }
-                        }),
+                        ),
                     }
                 ],
             }
@@ -111,48 +115,54 @@ def test_extract_visual_specs_with_filters():
             {
                 "displayName": "Page1",
                 "filters": [
-                    json.dumps({
-                        "expression": {
-                            "Column": {
-                                "Expression": {"SourceRef": {"Entity": "T"}},
-                                "Property": "colA",
-                            }
-                        },
-                        "type": "basic",
-                        "howCreated": "manual",
-                    }),
+                    json.dumps(
+                        {
+                            "expression": {
+                                "Column": {
+                                    "Expression": {"SourceRef": {"Entity": "T"}},
+                                    "Property": "colA",
+                                }
+                            },
+                            "type": "basic",
+                            "howCreated": "manual",
+                        }
+                    ),
                 ],
                 "visualContainers": [
                     {
-                        "config": json.dumps({
-                            "singleVisual": {
-                                "visualType": "tableEx",
-                                "prototypeQuery": {
-                                    "From": [{"Name": "a", "Entity": "T"}],
-                                    "Select": [
-                                        {
-                                            "Name": "C1",
-                                            "Column": {
-                                                "Expression": {"SourceRef": {"Source": "a"}},
-                                                "Property": "colA",
-                                            },
-                                        }
-                                    ],
-                                },
-                                "projections": {},
+                        "config": json.dumps(
+                            {
+                                "singleVisual": {
+                                    "visualType": "tableEx",
+                                    "prototypeQuery": {
+                                        "From": [{"Name": "a", "Entity": "T"}],
+                                        "Select": [
+                                            {
+                                                "Name": "C1",
+                                                "Column": {
+                                                    "Expression": {"SourceRef": {"Source": "a"}},
+                                                    "Property": "colA",
+                                                },
+                                            }
+                                        ],
+                                    },
+                                    "projections": {},
+                                }
                             }
-                        }),
+                        ),
                         "filters": [
-                            json.dumps({
-                                "expression": {
-                                    "Column": {
-                                        "Expression": {"SourceRef": {"Entity": "T"}},
-                                        "Property": "colB",
-                                    }
-                                },
-                                "type": "basic",
-                                "howCreated": "manual",
-                            }),
+                            json.dumps(
+                                {
+                                    "expression": {
+                                        "Column": {
+                                            "Expression": {"SourceRef": {"Entity": "T"}},
+                                            "Property": "colB",
+                                        }
+                                    },
+                                    "type": "basic",
+                                    "howCreated": "manual",
+                                }
+                            ),
                         ],
                     }
                 ],
@@ -166,22 +176,26 @@ def test_extract_visual_specs_with_filters():
 
 def test_parse_filter_blob():
     result = _parse_filter_blob(
-        json.dumps({
-            "expression": {
-                "Column": {
-                    "Expression": {"SourceRef": {"Entity": "T"}},
-                    "Property": "colA",
-                }
-            },
-            "type": "basic",
-        })
+        json.dumps(
+            {
+                "expression": {
+                    "Column": {
+                        "Expression": {"SourceRef": {"Entity": "T"}},
+                        "Property": "colA",
+                    }
+                },
+                "type": "basic",
+            }
+        )
     )
     assert result["table"] == "T"
     assert result["field"] == "colA"
     assert result["filter_type"] == "basic"
 
     # Already a dict
-    result2 = _parse_filter_blob({"expression": {"Column": {"Expression": {"SourceRef": {"Entity": "T2"}}, "Property": "X"}}, "type": "basic"})
+    result2 = _parse_filter_blob(
+        {"expression": {"Column": {"Expression": {"SourceRef": {"Entity": "T2"}}, "Property": "X"}}, "type": "basic"}
+    )
     assert result2 is not None
     assert result2["field"] == "X"
 
@@ -194,30 +208,34 @@ def test_parse_filter_blob():
 
 def test_parse_filter_blob_measure():
     result = _parse_filter_blob(
-        json.dumps({
-            "expression": {
-                "Measure": {
-                    "Expression": {"SourceRef": {"Entity": "T"}},
-                    "Property": "Total",
-                }
-            },
-            "type": "basic",
-        })
+        json.dumps(
+            {
+                "expression": {
+                    "Measure": {
+                        "Expression": {"SourceRef": {"Entity": "T"}},
+                        "Property": "Total",
+                    }
+                },
+                "type": "basic",
+            }
+        )
     )
     assert result["field"] == "Total"
 
 
 def test_parse_filter_blob_hierarchy_level():
     result = _parse_filter_blob(
-        json.dumps({
-            "expression": {
-                "HierarchyLevel": {
-                    "Expression": {"SourceRef": {"Entity": "Cal"}},
-                    "Property": "Date",
-                }
-            },
-            "type": "advanced",
-        })
+        json.dumps(
+            {
+                "expression": {
+                    "HierarchyLevel": {
+                        "Expression": {"SourceRef": {"Entity": "Cal"}},
+                        "Property": "Date",
+                    }
+                },
+                "type": "advanced",
+            }
+        )
     )
     assert result["field"] == "Date"
 
@@ -282,44 +300,48 @@ def test_multiple_visuals_in_section():
                 "displayName": "P1",
                 "visualContainers": [
                     {
-                        "config": json.dumps({
-                            "singleVisual": {
-                                "visualType": "columnChart",
-                                "prototypeQuery": {
-                                    "From": [{"Name": "a", "Entity": "T"}],
-                                    "Select": [
-                                        {
-                                            "Name": "M1",
-                                            "Measure": {
-                                                "Expression": {"SourceRef": {"Source": "a"}},
-                                                "Property": "M1",
-                                            },
-                                        }
-                                    ],
-                                },
-                                "projections": {"Category": [{"queryRef": "M1"}]},
+                        "config": json.dumps(
+                            {
+                                "singleVisual": {
+                                    "visualType": "columnChart",
+                                    "prototypeQuery": {
+                                        "From": [{"Name": "a", "Entity": "T"}],
+                                        "Select": [
+                                            {
+                                                "Name": "M1",
+                                                "Measure": {
+                                                    "Expression": {"SourceRef": {"Source": "a"}},
+                                                    "Property": "M1",
+                                                },
+                                            }
+                                        ],
+                                    },
+                                    "projections": {"Category": [{"queryRef": "M1"}]},
+                                }
                             }
-                        }),
+                        ),
                     },
                     {
-                        "config": json.dumps({
-                            "singleVisual": {
-                                "visualType": "card",
-                                "prototypeQuery": {
-                                    "From": [{"Name": "a", "Entity": "T"}],
-                                    "Select": [
-                                        {
-                                            "Name": "V1",
-                                            "Column": {
-                                                "Expression": {"SourceRef": {"Source": "a"}},
-                                                "Property": "Val",
-                                            },
-                                        }
-                                    ],
-                                },
-                                "projections": {"Values": [{"queryRef": "V1"}]},
+                        "config": json.dumps(
+                            {
+                                "singleVisual": {
+                                    "visualType": "card",
+                                    "prototypeQuery": {
+                                        "From": [{"Name": "a", "Entity": "T"}],
+                                        "Select": [
+                                            {
+                                                "Name": "V1",
+                                                "Column": {
+                                                    "Expression": {"SourceRef": {"Source": "a"}},
+                                                    "Property": "Val",
+                                                },
+                                            }
+                                        ],
+                                    },
+                                    "projections": {"Values": [{"queryRef": "V1"}]},
+                                }
                             }
-                        }),
+                        ),
                     },
                 ],
             }

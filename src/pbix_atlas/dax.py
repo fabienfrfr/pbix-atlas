@@ -8,9 +8,12 @@ from .models import DaxReference
 
 
 class DaxReferenceParser:
+    """DaxReferenceParser (see attributes/methods below)."""
+
     _REF = re.compile(r"(?:'([^']+)'|\b([A-Za-z_][A-Za-z0-9_]*)\b)?\[([^\[\]]+)\]")
 
     def parse(self, expression: str) -> list[DaxReference]:
+        """Parse. Takes `expression`."""
         if not expression:
             return []
         return [DaxReference(table=m.group(1) or m.group(2), name=m.group(3)) for m in self._REF.finditer(expression)]

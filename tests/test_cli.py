@@ -50,4 +50,5 @@ def test_main_help():
 
 def test_module_has_main():
     from pbix_atlas import cli
+
     assert hasattr(cli, "main")

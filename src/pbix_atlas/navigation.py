@@ -17,11 +17,13 @@ from .models import EdgeType
 
 
 def upstream(graph: nx.DiGraph, node: str, include_relationships: bool = False) -> set[str]:
+    """Upstream. Takes `graph`, `node`, `include_relationships`."""
     working_graph = graph if include_relationships else _without_relationships(graph)
     return nx.ancestors(working_graph, node) if node in working_graph else set()
 
 
 def downstream(graph: nx.DiGraph, node: str, include_relationships: bool = False) -> set[str]:
+    """Downstream. Takes `graph`, `node`, `include_relationships`."""
     working_graph = graph if include_relationships else _without_relationships(graph)
     return nx.descendants(working_graph, node) if node in working_graph else set()
 
@@ -36,6 +38,7 @@ def _without_relationships(graph: nx.DiGraph) -> nx.DiGraph:
 
 
 def find_nodes(graph: nx.DiGraph, name_contains: str) -> list[str]:
+    """Find nodes. Takes `graph`, `name_contains`."""
     needle = name_contains.lower()
     return [n for n in graph.nodes if needle in n.lower()]
 
@@ -57,6 +60,7 @@ def build_tree(graph: nx.DiGraph, node: str, direction: str = "downstream", max_
 
 
 def print_tree(graph: nx.DiGraph, node: str, direction: str = "downstream", max_depth: int = 12) -> None:
+    """Print tree. Takes `graph`, `node`, `direction`, `max_depth`."""
     tree = build_tree(graph, node, direction=direction, max_depth=max_depth)
 
     def _print(entry: dict, prefix: str, is_root: bool) -> None:
@@ -71,11 +75,27 @@ def print_tree(graph: nx.DiGraph, node: str, direction: str = "downstream", max_
     _print(tree, "", is_root=True)
 
 
+def _graphml_safe_value(value):
+    """GraphML attributes must be str/int/float/bool/long: no None, no dict/list."""
+    if value is None:
+        return ""
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    return json.dumps(value, ensure_ascii=False, default=str)
+
+
 def export_graphml(graph: nx.DiGraph, path: str | Path) -> None:
-    nx.write_graphml(graph, str(path))
+    """Export graphml. Takes `graph`, `path`."""
+    safe_graph = nx.DiGraph()
+    for n, data in graph.nodes(data=True):
+        safe_graph.add_node(n, **{k: _graphml_safe_value(v) for k, v in data.items()})
+    for u, v, data in graph.edges(data=True):
+        safe_graph.add_edge(u, v, **{k: _graphml_safe_value(val) for k, val in data.items()})
+    nx.write_graphml(safe_graph, str(path))
 
 
 def export_edges_csv(graph: nx.DiGraph, path: str | Path) -> None:
+    """Export edges csv. Takes `graph`, `path`."""
     rows = [
         {
             "source": u,
@@ -90,6 +110,7 @@ def export_edges_csv(graph: nx.DiGraph, path: str | Path) -> None:
 
 
 def export_nodes_csv(graph: nx.DiGraph, path: str | Path) -> None:
+    """Export nodes csv. Takes `graph`, `path`."""
     rows = [{"id": n, **d} for n, d in graph.nodes(data=True)]
     pd.DataFrame(rows).to_csv(path, index=False)
 
@@ -286,6 +307,7 @@ def print_output_schema(graph: nx.DiGraph) -> None:
 
 
 def graph_summary(graph: nx.DiGraph) -> dict[str, int]:
+    """Graph summary. Takes `graph`."""
     counts: dict[str, int] = {}
     for _, d in graph.nodes(data=True):
         counts[d.get("type", "?")] = counts.get(d.get("type", "?"), 0) + 1

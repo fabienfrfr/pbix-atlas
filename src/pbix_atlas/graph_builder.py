@@ -24,6 +24,8 @@ from .sources import SourceDetectorRegistry, normalize_source_identifier
 
 
 class LineageGraphBuilder:
+    """LineageGraphBuilder (see attributes/methods below)."""
+
     def __init__(
         self,
         source_registry: SourceDetectorRegistry | None = None,
@@ -31,12 +33,14 @@ class LineageGraphBuilder:
         m_resolver: MQueryDependencyResolver | None = None,
         layout_parser: ReportLayoutParser | None = None,
     ):
+        """Initialize."""
         self.source_registry = source_registry or SourceDetectorRegistry()
         self.dax_parser = dax_parser or DaxReferenceParser()
         self.m_resolver = m_resolver or MQueryDependencyResolver()
         self.layout_parser = layout_parser or ReportLayoutParser()
 
     def build(self, pbix_path: str | Path) -> nx.DiGraph:
+        """Build. Takes `pbix_path`."""
         pbix_path = Path(pbix_path)
         model = PBIXModel(pbix_path)
         g = nx.DiGraph()

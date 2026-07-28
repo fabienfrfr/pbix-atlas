@@ -10,6 +10,8 @@ from pbix_atlas.api.schemas import (
     ExportResponse,
     CodegenRequest,
     CodegenResponse,
+    SourceSchemaRequest,
+    SourceSchemaResponse,
 )
 
 
@@ -87,8 +89,10 @@ def test_export_response():
         graphml_path="/out/g.graphml",
         nodes_csv_path="/out/g_nodes.csv",
         edges_csv_path="/out/g_edges.csv",
+        json_path="/out/g.json",
     )
     assert "graphml" in r.graphml_path
+    assert "json" in r.json_path
 
 
 def test_codegen_request_defaults():
@@ -102,3 +106,14 @@ def test_codegen_response():
         stats={"queries": 5, "measures_translated": 3},
     )
     assert r.stats["measures_translated"] == 3
+
+
+def test_source_schema_request_defaults():
+    r = SourceSchemaRequest(pbix_path="/f.pbix")
+    assert r.title == "Source Lineage Report"
+
+
+def test_source_schema_response():
+    r = SourceSchemaResponse(markdown="# Report", schema_data={"http::example.com": {}})
+    assert r.markdown.startswith("# Report")
+    assert "http::example.com" in r.schema_data

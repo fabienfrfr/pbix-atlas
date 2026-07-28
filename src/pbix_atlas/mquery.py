@@ -15,6 +15,7 @@ class MQueryDependencyResolver:
     """
 
     def resolve(self, queries: dict[str, str]) -> dict[str, set[str]]:
+        """Resolve. Takes `queries`."""
         graph: dict[str, set[str]] = {}
         for name, expr in queries.items():
             deps = {

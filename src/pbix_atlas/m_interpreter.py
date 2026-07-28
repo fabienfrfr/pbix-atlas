@@ -1,3 +1,5 @@
+"""M interpreter."""
+
 from __future__ import annotations
 
 import io
@@ -40,6 +42,7 @@ class MTable:
     df: pd.DataFrame
 
     def __repr__(self) -> str:
+        """Return a debug-friendly string representation."""
         return f"MTable({len(self.df)} rows, cols={list(self.df.columns)})"
 
 
@@ -54,6 +57,7 @@ class MFunction:
     interpreter: MInterpreter = field(repr=False)
 
     def call(self, args: list[Any]) -> Any:
+        """Call. Takes `args`."""
         child = self.closure.child()
         for name, val in zip(self.params, args, strict=False):
             child.set(name, val)
@@ -61,11 +65,15 @@ class MFunction:
 
 
 class Env:
+    """Env (see attributes/methods below)."""
+
     def __init__(self, parent: Env | None = None):
+        """Initialize."""
         self.vars: dict[str, Any] = {}
         self.parent = parent
 
     def get(self, name: str) -> Any:
+        """Get. Takes `name`."""
         env: Env | None = self
         while env is not None:
             if name in env.vars:
@@ -74,6 +82,7 @@ class Env:
         raise MRuntimeError(f"Unbound identifier: {name}")
 
     def has(self, name: str) -> bool:
+        """Has. Takes `name`."""
         env: Env | None = self
         while env is not None:
             if name in env.vars:
@@ -82,20 +91,26 @@ class Env:
         return False
 
     def set(self, name: str, value: Any) -> None:
+        """Set. Takes `name`, `value`."""
         self.vars[name] = value
 
     def child(self) -> Env:
+        """Child."""
         return Env(parent=self)
 
 
 @dataclass
 class SqlDatabaseHandle:
+    """SqlDatabaseHandle (see attributes/methods below)."""
+
     server: str
     database: str
 
 
 @dataclass
 class ODataFeedHandle:
+    """ODataFeedHandle (see attributes/methods below)."""
+
     url: str
 
 
@@ -115,11 +130,15 @@ def _as_row(row: Any):
 
 # --------------------------------------------------------------- interpreter
 class MInterpreter:
+    """MInterpreter (see attributes/methods below)."""
+
     def __init__(self, stdlib: dict[str, Callable] | None = None, globals_: dict[str, Any] | None = None):
+        """Initialize."""
         self.stdlib = {**_default_stdlib(), **(stdlib or {})}
         self.globals = {**_default_globals(), **(globals_ or {})}
 
     def eval(self, node: MNode, env: Env) -> Any:  # noqa: PLR0911
+        """Eval. Takes `node`, `env`."""
         if isinstance(node, Lit):
             return node.value
         if isinstance(node, Ident):
@@ -480,6 +499,7 @@ def _fn_table_nestedjoin(  # noqa: PLR0913, PLR0917
     df1, df2 = t1.df, t2.df
 
     def find_matches(row):
+        """Find matches. Takes `row`."""
         mask = pd.Series(True, index=df2.index)
         for k1, k2 in zip(keys1, keys2, strict=False):
             mask &= df2[k2] == row[k1]

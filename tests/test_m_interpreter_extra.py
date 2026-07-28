@@ -189,7 +189,7 @@ def test_number_round():
 
 
 def test_date_year():
-    result = run('#date(2024, 6, 15)')
+    result = run("#date(2024, 6, 15)")
     assert result.year == 2024
 
 
@@ -277,16 +277,13 @@ def test_error_raises_m_runtime_error():
         run('error "something went wrong"')
 
 
-
-
-
 def test_record_field():
     result = run('Record.Field([a = 1, b = 2], "a")')
     assert result == 1
 
 
 def test_value_is():
-    assert run('Value.Is(42, Int64.Type)') is True
+    assert run("Value.Is(42, Int64.Type)") is True
 
 
 def test_table_transform_column_types():

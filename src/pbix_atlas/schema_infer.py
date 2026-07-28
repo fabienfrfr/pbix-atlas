@@ -37,6 +37,8 @@ _REMOVE_FUNCS = {"Table.RemoveColumns"}
 
 @dataclass
 class InferredSchema:
+    """InferredSchema (see attributes/methods below)."""
+
     columns: list[str] = field(default_factory=list)
     dynamic_rename: bool = False  # an unresolvable (table-driven) rename occurred somewhere in the chain
     names_are_post_rename: bool = False  # True: `columns` were captured *after* an unresolved rename,

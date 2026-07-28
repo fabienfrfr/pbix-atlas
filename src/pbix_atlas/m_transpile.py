@@ -192,6 +192,7 @@ class MTranspiler:
         return lines, final
 
     def expr(self, node: MNode, scope: set[str], model_ref: str = "model") -> str:  # noqa: PLR0911
+        """Expr. Takes `node`, `scope`, `model_ref`."""
         if isinstance(node, Lit):
             return repr(node.value)
         if isinstance(node, Ident):
@@ -285,4 +286,5 @@ class MTranspiler:
 
 
 def transpile_query(ast: MNode, model_ref: str = "model") -> tuple[list[str], str]:
+    """Transpile query. Takes `ast`, `model_ref`."""
     return MTranspiler().transpile_query(ast, model_ref)

@@ -40,6 +40,8 @@ VISUAL_TYPE_MAP: dict[str, str] = {
 
 @dataclass
 class VisualSpec:
+    """VisualSpec (see attributes/methods below)."""
+
     page: str
     visual_index: int
     visual_type: str
@@ -51,6 +53,8 @@ class VisualSpec:
 
 @dataclass
 class PageFilters:
+    """PageFilters (see attributes/methods below)."""
+
     page: str
     filters: list[dict] = field(default_factory=list)
 
@@ -96,6 +100,7 @@ def _parse_filter_blob(raw) -> dict | None:
 
 
 def extract_visual_specs(layout: dict) -> list[VisualSpec]:
+    """Extract visual specs. Takes `layout`."""
     specs: list[VisualSpec] = []
     for section in layout.get("sections", []):
         page = section.get("displayName") or section.get("name", "")

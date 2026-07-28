@@ -44,6 +44,7 @@ def _test_lifespan(cache):
     async def lifespan(app):
         app.state.cache = cache
         yield
+
     return lifespan
 
 
@@ -75,6 +76,9 @@ def error_client(tmp_path):
     cache.downstream = lambda pbix_path, nid, **kw: (_ for _ in ()).throw(ValueError("test error"))
     cache.tree = lambda pbix_path, nid, **kw: (_ for _ in ()).throw(ValueError("test error"))
     cache.export = lambda pbix_path, out_dir: (_ for _ in ()).throw(ValueError("test error"))
+    cache.source_schema = lambda pbix_path, title="Source Lineage Report": (_ for _ in ()).throw(
+        ValueError("test error")
+    )
     cache.codegen = lambda pbix_path, out="": (_ for _ in ()).throw(ValueError("test error"))
     original_lifespan = app.router.lifespan_context
     app.router.lifespan_context = _test_lifespan(cache)
@@ -105,6 +109,44 @@ def test_list_loaded_graphs(client):
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
+
+
+def test_invalidate_graph(client):
+    c, pbix_path = client
+    c.post("/graphs", json={"pbix_path": pbix_path})
+    assert c.get("/graphs").json() != []
+
+    resp = c.post("/graphs/invalidate", json={"pbix_path": pbix_path})
+    assert resp.status_code == 200
+    assert resp.json()["evicted"] is True
+
+    assert c.get("/graphs").json() == []
+
+
+def test_invalidate_graph_unknown_path(client):
+    c, pbix_path = client
+    resp = c.post("/graphs/invalidate", json={"pbix_path": "/never/built.pbix"})
+    assert resp.status_code == 200
+    assert resp.json()["evicted"] is False
+
+
+def test_invalidate_all_graphs(client):
+    c, pbix_path = client
+    c.post("/graphs", json={"pbix_path": pbix_path})
+    resp = c.post("/graphs/invalidate-all")
+    assert resp.status_code == 200
+    assert resp.json()["evicted_count"] >= 1
+    assert c.get("/graphs").json() == []
+
+
+def test_build_graph_accepts_force_rebuild_flag(client):
+    """force_rebuild triggers a real re-parse (unlike the other client tests,
+    which pre-seed a fake graph into the cache) - the actual rebuild
+    behavior is unit-tested at the service layer; here we only check the
+    request schema round-trips the flag without erroring on validation."""
+    c, pbix_path = client
+    resp = c.post("/graphs", json={"pbix_path": pbix_path, "force_rebuild": False})
+    assert resp.status_code == 200
 
 
 def test_search_nodes(client):
@@ -211,11 +253,32 @@ def test_export_graph_error(error_client):
     assert resp.status_code == 400
 
 
+def test_get_source_schema(client):
+    c, pbix_path = client
+    resp = c.post("/source-schema", json={"pbix_path": pbix_path})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "markdown" in data
+    assert "schema_data" in data
+    assert "Source Lineage Report" in data["markdown"]
+
+
+def test_get_source_schema_custom_title(client):
+    c, pbix_path = client
+    resp = c.post("/source-schema", json={"pbix_path": pbix_path, "title": "My Title"})
+    assert resp.status_code == 200
+    assert "My Title" in resp.json()["markdown"]
+
+
+def test_get_source_schema_error(error_client):
+    c, pbix_path = error_client
+    resp = c.post("/source-schema", json={"pbix_path": pbix_path})
+    assert resp.status_code == 400
+
+
 def test_codegen(client, tmp_path):
     c, pbix_path = client
-    with patch(
-        "pbix_atlas.api.service.generate_python_pipeline_with_stats"
-    ) as mock_codegen:
+    with patch("pbix_atlas.api.service.generate_python_pipeline_with_stats") as mock_codegen:
         mock_codegen.return_value = (str(tmp_path / "out.py"), {"tables": 1})
         resp = c.post(
             "/codegen",
@@ -229,11 +292,11 @@ def test_codegen(client, tmp_path):
 
 def test_codegen_default_path(client):
     c, pbix_path = client
-    with patch(
-        "pbix_atlas.api.service.generate_python_pipeline_with_stats"
-    ) as mock_codegen:
+    with patch("pbix_atlas.api.service.generate_python_pipeline_with_stats") as mock_codegen:
+
         def _mock_codegen(p, out):
             return (str(out), {"tables": 1})
+
         mock_codegen.side_effect = _mock_codegen
         resp = c.post(
             "/codegen",

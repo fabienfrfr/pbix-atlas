@@ -7,6 +7,8 @@ from enum import Enum
 
 
 class NodeType(str, Enum):
+    """NodeType (see attributes/methods below)."""
+
     SOURCE = "source"
     QUERY = "query"
     COLUMN = "column"
@@ -17,6 +19,8 @@ class NodeType(str, Enum):
 
 
 class EdgeType(str, Enum):
+    """EdgeType (see attributes/methods below)."""
+
     FEEDS = "feeds"  # source -> query, query -> query, query -> column
     DERIVES_FROM = "derives_from"  # calculated column / measure depends on another node
     RELATES_TO = "relates_to"  # model relationship (join)
@@ -25,6 +29,8 @@ class EdgeType(str, Enum):
 
 @dataclass(frozen=True)
 class SourceRef:
+    """SourceRef (see attributes/methods below)."""
+
     system: str  # "http", "odata", "sql", "folder", "excel_file", ...
     identifier: str
     raw_match: str
@@ -32,12 +38,16 @@ class SourceRef:
 
 @dataclass(frozen=True)
 class DaxReference:
+    """DaxReference (see attributes/methods below)."""
+
     table: str | None  # None for an unqualified reference, e.g. [MyMeasure]
     name: str
 
 
 @dataclass(frozen=True)
 class VisualFieldUsage:
+    """VisualFieldUsage (see attributes/methods below)."""
+
     page: str
     visual_index: int
     visual_type: str
@@ -47,4 +57,5 @@ class VisualFieldUsage:
 
 
 def node_id(node_type: NodeType, *parts: str) -> str:
+    """Node id. Takes `node_type`."""
     return f"{node_type.value}::" + "::".join(parts)

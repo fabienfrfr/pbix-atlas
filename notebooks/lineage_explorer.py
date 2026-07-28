@@ -42,6 +42,7 @@ def _():
 @app.cell
 def _():
     import subprocess
+
     subprocess.run("ls", shell=True)
 
     file_path = "data/DEMO_ANONYM.pbix"

@@ -66,6 +66,7 @@ def test_item_access():
 
 def test_invoke_simple():
     from pbix_atlas.m_transpile import SIMPLE_CALLS
+
     func_name = list(SIMPLE_CALLS.keys())[0]
     result = _t(Invoke(Ident(func_name), [Ident("x")]))
     assert "m_ops." in result
@@ -171,6 +172,7 @@ def test_record_expr():
 
 def test_let_expr():
     from pbix_atlas.m_transpile import MTranspiler
+
     ast = LetExpr(steps=[("X", Lit(1))], body=Ident("X"))
     lines, final = MTranspiler().transpile_query(ast)
     assert len(lines) == 1
@@ -226,6 +228,7 @@ def test_transpile_query_non_let():
 
 def test_transpile_module_function():
     from pbix_atlas.m_transpile import transpile_query
+
     ast = LetExpr(steps=[("X", Lit(1))], body=Ident("X"))
     lines, final = transpile_query(ast)
     assert len(lines) == 1
@@ -283,6 +286,7 @@ def test_binop_ge():
 
 def test_invoke_simple_call():
     from pbix_atlas.m_transpile import SIMPLE_CALLS
+
     for m_name, py_name in list(SIMPLE_CALLS.items())[:5]:
         result = _t(Invoke(Ident(m_name), [Ident("x")]))
         assert f"m_ops.{py_name}(" in result

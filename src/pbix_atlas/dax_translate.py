@@ -1,3 +1,5 @@
+"""Dax translate."""
+
 from __future__ import annotations
 
 import re
@@ -9,6 +11,8 @@ from .models import DaxReference
 
 @dataclass
 class DaxTranslation:
+    """DaxTranslation (see attributes/methods below)."""
+
     python_expr: str
     supported: bool
     referenced_tables: set[str]
@@ -68,10 +72,14 @@ def _split_top_level_args(text: str) -> list[str]:
 
 
 class DaxTranslator:
+    """DaxTranslator (see attributes/methods below)."""
+
     def __init__(self) -> None:
+        """Initialize."""
         self._ref_parser = DaxReferenceParser()
 
     def translate(self, expr: str, default_table: str) -> DaxTranslation:  # noqa: PLR0911
+        """Translate. Takes `expr`, `default_table`."""
         expr = expr.strip()
         tables: set[str] = set()
 
@@ -133,4 +141,5 @@ class DaxTranslator:
 
 
 def collect_dax_refs(expr: str) -> list[DaxReference]:
+    """Collect dax refs. Takes `expr`."""
     return DaxReferenceParser().parse(expr)

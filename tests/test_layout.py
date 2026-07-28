@@ -45,23 +45,25 @@ def test_iter_visual_fields_section_no_vc():
 
 
 def test_iter_visual_fields_with_valid_visual():
-    vc_config = json.dumps({
-        "singleVisual": {
-            "visualType": "columnChart",
-            "prototypeQuery": {
-                "From": [{"Name": "a", "Entity": "Sales"}],
-                "Select": [
-                    {
-                        "Name": "SumAmount",
-                        "Measure": {
-                            "Expression": {"SourceRef": {"Source": "a"}},
-                            "Property": "Amount",
-                        },
-                    }
-                ],
-            },
+    vc_config = json.dumps(
+        {
+            "singleVisual": {
+                "visualType": "columnChart",
+                "prototypeQuery": {
+                    "From": [{"Name": "a", "Entity": "Sales"}],
+                    "Select": [
+                        {
+                            "Name": "SumAmount",
+                            "Measure": {
+                                "Expression": {"SourceRef": {"Source": "a"}},
+                                "Property": "Amount",
+                            },
+                        }
+                    ],
+                },
+            }
         }
-    })
+    )
     layout = {
         "sections": [
             {
@@ -82,23 +84,25 @@ def test_iter_visual_fields_with_valid_visual():
 
 
 def test_iter_visual_fields_column_field():
-    vc_config = json.dumps({
-        "singleVisual": {
-            "visualType": "tableEx",
-            "prototypeQuery": {
-                "From": [{"Name": "a", "Entity": "Products"}],
-                "Select": [
-                    {
-                        "Name": "ProdName",
-                        "Column": {
-                            "Expression": {"SourceRef": {"Source": "a"}},
-                            "Property": "ProductName",
-                        },
-                    }
-                ],
-            },
+    vc_config = json.dumps(
+        {
+            "singleVisual": {
+                "visualType": "tableEx",
+                "prototypeQuery": {
+                    "From": [{"Name": "a", "Entity": "Products"}],
+                    "Select": [
+                        {
+                            "Name": "ProdName",
+                            "Column": {
+                                "Expression": {"SourceRef": {"Source": "a"}},
+                                "Property": "ProductName",
+                            },
+                        }
+                    ],
+                },
+            }
         }
-    })
+    )
     layout = {
         "sections": [
             {
@@ -150,9 +154,7 @@ def test_resolve_select_item_aggregation():
             }
         }
     }
-    kind, table, field = ReportLayoutParser()._resolve_select_item(
-        item, {"a": "Sales"}
-    )
+    kind, table, field = ReportLayoutParser()._resolve_select_item(item, {"a": "Sales"})
     assert kind == "Column"
     assert table == "Sales"
     assert field == "Amount"
@@ -165,9 +167,7 @@ def test_resolve_select_item_hierarchy_level():
             "Property": "DateField",
         }
     }
-    kind, table, field = ReportLayoutParser()._resolve_select_item(
-        item, {"a": "Calendar"}
-    )
+    kind, table, field = ReportLayoutParser()._resolve_select_item(item, {"a": "Calendar"})
     assert kind == "HierarchyLevel"
     assert table == "Calendar"
     assert field == "DateField"
@@ -188,9 +188,7 @@ def test_resolve_select_item_percentile():
             "Property": "PctField",
         }
     }
-    kind, table, field = ReportLayoutParser()._resolve_select_item(
-        item, {"a": "T"}
-    )
+    kind, table, field = ReportLayoutParser()._resolve_select_item(item, {"a": "T"})
     assert kind == "Percentile"
     assert table == "T"
     assert field == "PctField"
@@ -218,9 +216,7 @@ def test_load_raw_layout_key_error():
 
 
 def test_page_name_fallback():
-    layout = {
-        "sections": [{"name": "Section1", "visualContainers": []}]
-    }
+    layout = {"sections": [{"name": "Section1", "visualContainers": []}]}
     fields = list(ReportLayoutParser().iter_visual_fields(layout))
     assert fields == []
 
@@ -232,20 +228,25 @@ def test_multiple_pages_and_visuals():
                 "displayName": "P1",
                 "visualContainers": [
                     {
-                        "config": json.dumps({
-                            "singleVisual": {
-                                "visualType": "card",
-                                "prototypeQuery": {
-                                    "From": [{"Name": "a", "Entity": "T"}],
-                                    "Select": [
-                                        {
-                                            "Name": "M1",
-                                            "Measure": {"Expression": {"SourceRef": {"Source": "a"}}, "Property": "M1"},
-                                        }
-                                    ],
-                                },
+                        "config": json.dumps(
+                            {
+                                "singleVisual": {
+                                    "visualType": "card",
+                                    "prototypeQuery": {
+                                        "From": [{"Name": "a", "Entity": "T"}],
+                                        "Select": [
+                                            {
+                                                "Name": "M1",
+                                                "Measure": {
+                                                    "Expression": {"SourceRef": {"Source": "a"}},
+                                                    "Property": "M1",
+                                                },
+                                            }
+                                        ],
+                                    },
+                                }
                             }
-                        }),
+                        ),
                     }
                 ],
             },
@@ -253,20 +254,25 @@ def test_multiple_pages_and_visuals():
                 "displayName": "P2",
                 "visualContainers": [
                     {
-                        "config": json.dumps({
-                            "singleVisual": {
-                                "visualType": "card",
-                                "prototypeQuery": {
-                                    "From": [{"Name": "a", "Entity": "T"}],
-                                    "Select": [
-                                        {
-                                            "Name": "M2",
-                                            "Measure": {"Expression": {"SourceRef": {"Source": "a"}}, "Property": "M2"},
-                                        }
-                                    ],
-                                },
+                        "config": json.dumps(
+                            {
+                                "singleVisual": {
+                                    "visualType": "card",
+                                    "prototypeQuery": {
+                                        "From": [{"Name": "a", "Entity": "T"}],
+                                        "Select": [
+                                            {
+                                                "Name": "M2",
+                                                "Measure": {
+                                                    "Expression": {"SourceRef": {"Source": "a"}},
+                                                    "Property": "M2",
+                                                },
+                                            }
+                                        ],
+                                    },
+                                }
                             }
-                        }),
+                        ),
                     }
                 ],
             },

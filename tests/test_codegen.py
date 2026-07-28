@@ -31,14 +31,14 @@ def test_indent():
 
 
 def test_compute_stats():
-    code = '''
+    code = """
 measures[("T", "M1")] = model["T"]["A"].sum()
 measures[("T", "M2")] = MeasureNotSupported("T", "M2", "COMPLEX(...)")
 vm.Graph(id="g1", figure=...)
 vm.Card(id="c1", text=...)
 vm.Table(id="t1", figure=...)
 # 2 visual(s) not mapped
-'''
+"""
     graph = nx.DiGraph()
     graph.add_node("q1", type="query", label="Q1")
     stats = _compute_stats(code, graph)

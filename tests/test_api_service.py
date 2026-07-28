@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -80,6 +81,18 @@ def test_export(cache, tmp_path):
     assert Path(result["nodes_csv_path"]).exists()
 
 
+def test_source_schema(cache):
+    result = cache.source_schema("/fake/path.pbix")
+    assert "markdown" in result
+    assert "schema_data" in result
+    assert "Source Lineage Report" in result["markdown"]
+
+
+def test_source_schema_custom_title(cache):
+    result = cache.source_schema("/fake/path.pbix", title="Custom Title")
+    assert "Custom Title" in result["markdown"]
+
+
 def test_codegen_default_output(cache, tmp_path):
     pbix_path = str(tmp_path / "report.pbix")
     Path(pbix_path).touch()
@@ -112,3 +125,71 @@ def test_upstream_with_relationships(cache):
 def test_downstream_with_relationships(cache):
     nodes = cache.downstream("/fake/path.pbix", "src1", include_relationships=True)
     assert isinstance(nodes, list)
+
+
+def test_invalidate_evicts_cached_graph(cache):
+    cache.get_or_build("/fake/path.pbix")
+    assert cache.loaded_paths() == [str(Path("/fake/path.pbix").resolve())]
+    evicted = cache.invalidate("/fake/path.pbix")
+    assert evicted is True
+    assert cache.loaded_paths() == []
+
+
+def test_invalidate_unknown_path_returns_false(cache):
+    assert cache.invalidate("/never/built.pbix") is False
+
+
+def test_invalidate_forces_rebuild(cache):
+    g1 = cache.get_or_build("/fake/path.pbix")
+    cache.invalidate("/fake/path.pbix")
+    g2 = cache.get_or_build("/fake/path.pbix")
+    assert cache._builder.build.call_count == 2
+    assert g1 is not None and g2 is not None
+
+
+def test_invalidate_all_evicts_everything(cache):
+    cache.get_or_build("/fake/path1.pbix")
+    cache._builder.build.return_value = _make_graph()
+    cache.get_or_build("/fake/path2.pbix")
+    assert len(cache.loaded_paths()) == 2
+    count = cache.invalidate_all()
+    assert count == 2
+    assert cache.loaded_paths() == []
+
+
+def test_invalidate_all_on_empty_cache(cache):
+    assert cache.invalidate_all() == 0
+
+
+def test_get_or_build_force_rebuild(cache):
+    cache.get_or_build("/fake/path.pbix")
+    cache.get_or_build("/fake/path.pbix", force_rebuild=True)
+    assert cache._builder.build.call_count == 2
+
+
+def test_get_or_build_auto_invalidates_on_mtime_change(cache, tmp_path):
+    pbix = tmp_path / "report.pbix"
+    pbix.write_bytes(b"v1")
+    cache.get_or_build(str(pbix))
+    assert cache._builder.build.call_count == 1
+
+    # Simulate the file being modified on disk: bump its mtime.
+    new_mtime = pbix.stat().st_mtime + 5
+    os.utime(pbix, (new_mtime, new_mtime))
+
+    cache.get_or_build(str(pbix))
+    assert cache._builder.build.call_count == 2
+
+
+def test_get_or_build_reuses_cache_when_mtime_unchanged(cache, tmp_path):
+    pbix = tmp_path / "report.pbix"
+    pbix.write_bytes(b"v1")
+    cache.get_or_build(str(pbix))
+    cache.get_or_build(str(pbix))
+    assert cache._builder.build.call_count == 1
+
+
+def test_summary_force_rebuild(cache):
+    cache.summary("/fake/path.pbix")
+    cache.summary("/fake/path.pbix", force_rebuild=True)
+    assert cache._builder.build.call_count == 2

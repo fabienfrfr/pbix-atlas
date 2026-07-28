@@ -1,3 +1,5 @@
+"""M lexer."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -5,6 +7,8 @@ from enum import Enum, auto
 
 
 class TokType(Enum):
+    """TokType (see attributes/methods below)."""
+
     NUMBER = auto()
     STRING = auto()
     IDENT = auto()  # bare identifier, dotted identifier, or #"quoted identifier"
@@ -43,16 +47,21 @@ _SINGLE_CHAR_OPS = set("+-*/,(){}[]=<>&.?@!;:")
 
 @dataclass
 class Token:
+    """Token (see attributes/methods below)."""
+
     type: TokType
     value: str
     pos: int
 
 
 class MLexError(Exception):
+    """MLexError (see attributes/methods below)."""
+
     pass
 
 
 def tokenize(text: str) -> list[Token]:
+    """Tokenize. Takes `text`."""
     tokens: list[Token] = []
     i, n = 0, len(text)
     while i < n:

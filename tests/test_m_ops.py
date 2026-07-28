@@ -143,9 +143,7 @@ def test_table_replace_value():
 
 def test_table_replace_value_predicate():
     df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-    result = m_ops.table_replace_value(
-        df, lambda row: row["A"] > 1, 0, m_ops.default_replacer, ["A", "B"]
-    )
+    result = m_ops.table_replace_value(df, lambda row: row["A"] > 1, 0, m_ops.default_replacer, ["A", "B"])
     assert list(result["A"]) == [1, 0, 0]
     assert list(result["B"]) == [4, 5, 6]
 
@@ -158,9 +156,7 @@ def test_table_nested_join():
     assert len(result) == 3
     assert len(result.iloc[0]["Joined"]) == 1
 
-    result2 = m_ops.table_nested_join(
-        left[:0], "Key", right, "Key", "Joined"
-    )
+    result2 = m_ops.table_nested_join(left[:0], "Key", right, "Key", "Joined")
     assert len(result2) == 0
 
 
@@ -621,6 +617,7 @@ class TestSpecialOps:
 
     def test_binary_from_text(self):
         import base64
+
         result = m_ops.binary_from_text("aGVsbG8=", "base64")
         assert result == b"hello"
         result2 = m_ops.binary_from_text("68656c6c6f")
@@ -628,6 +625,7 @@ class TestSpecialOps:
 
     def test_binary_decompress(self):
         import zlib
+
         data = zlib.compress(b"hello")
         result = m_ops.binary_decompress(data)
         assert result == b"hello"

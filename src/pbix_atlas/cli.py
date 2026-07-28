@@ -10,6 +10,7 @@ from .codegen import generate_python_pipeline
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Main. Takes `argv`."""
     parser = argparse.ArgumentParser(
         prog="pbix-atlas-codegen",
         description=(

@@ -1,3 +1,5 @@
+"""Sources."""
+
 from __future__ import annotations
 
 import re
@@ -7,10 +9,18 @@ from .models import SourceRef
 
 
 class SourceDetector(Protocol):
-    def detect(self, expression: str) -> list[SourceRef]: ...
+    """Structural interface for anything that can scan an M expression and
+    return the physical sources it references."""
+
+    def detect(self, expression: str) -> list[SourceRef]:
+        """Return the `SourceRef`s found in `expression`."""
+        ...
 
 
 class MFunctionSourceDetector:
+    """Detects physical sources by regex-matching known M connector functions
+    (`Web.Contents`, `OData.Feed`, `Sql.Database`, `Folder.Files`, ...)."""
+
     DEFAULT_PATTERNS: ClassVar[dict[str, str]] = {
         "http": r'Web\.Contents\(\s*"([^"]+)"',
         "odata": r'OData\.Feed\(\s*"([^"]+)"',
@@ -26,11 +36,13 @@ class MFunctionSourceDetector:
     }
 
     def __init__(self, patterns: dict[str, str] | None = None):
+        """Initialize."""
         self._compiled = {
             system: re.compile(pattern) for system, pattern in (patterns or self.DEFAULT_PATTERNS).items()
         }
 
     def detect(self, expression: str) -> list[SourceRef]:
+        """Detect. Takes `expression`."""
         found = []
         for system, pattern in self._compiled.items():
             for m in pattern.finditer(expression):
@@ -41,9 +53,13 @@ class MFunctionSourceDetector:
 
 
 class LiteralUrlFallbackDetector:
+    """Fallback detector: catches bare `"https://..."` literals that no
+    known M connector function wraps (e.g. a parameter-query URL)."""
+
     _URL = re.compile(r'"(https?://[^"\s]+)"')
 
     def detect(self, expression: str) -> list[SourceRef]:
+        """Detect. Takes `expression`."""
         return [
             SourceRef(system="http", identifier=m.group(1), raw_match=m.group(0))
             for m in self._URL.finditer(expression)
@@ -51,10 +67,15 @@ class LiteralUrlFallbackDetector:
 
 
 class SourceDetectorRegistry:
+    """Runs every registered `SourceDetector` over an expression and
+    deduplicates results by `(system, identifier)`."""
+
     def __init__(self, detectors: list[SourceDetector] | None = None):
+        """Initialize."""
         self._detectors = detectors or [MFunctionSourceDetector(), LiteralUrlFallbackDetector()]
 
     def detect(self, expression: str) -> list[SourceRef]:
+        """Detect. Takes `expression`."""
         seen: set[tuple[str, str]] = set()
         out: list[SourceRef] = []
         for detector in self._detectors:

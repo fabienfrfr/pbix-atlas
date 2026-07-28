@@ -1,6 +1,6 @@
 [project]
 name = "pbix-atlas"
-version = "0.3.0"
+version = "1.0.0"
 description = "Universal lineage graph for Power BI (.pbix) files, from physical source to report display."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -90,4 +90,5 @@ testpaths = ["tests"]
 [dependency-groups]
 dev = [
     "pytest-cov>=7.1.0",
+    "ruff>=0.16",
 ]
