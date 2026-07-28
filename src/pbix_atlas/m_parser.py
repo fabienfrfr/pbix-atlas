@@ -270,7 +270,7 @@ class MParser:
             break
         return args
 
-    def parse_primary(self) -> MNode:  # noqa: PLR0911, PLR0912, PLR0915
+    def parse_primary(self) -> MNode:  # noqa: PLR0911
         tok = self._peek()
 
         if tok.type == TokType.NUMBER:
@@ -412,7 +412,7 @@ class MParser:
         body = self.parse_expr()
         return LetExpr(steps=steps, body=body)
 
-    def _parse_type(self) -> MNode:  # noqa: PLR0912
+    def _parse_type(self) -> MNode:
         if self._check("nullable"):
             self._advance()
         tok = self._peek()

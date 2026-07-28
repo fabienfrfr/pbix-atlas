@@ -191,7 +191,7 @@ class MTranspiler:
         final = self.expr(ast.body, scope, model_ref)
         return lines, final
 
-    def expr(self, node: MNode, scope: set[str], model_ref: str = "model") -> str:  # noqa: PLR0911, PLR0912
+    def expr(self, node: MNode, scope: set[str], model_ref: str = "model") -> str:  # noqa: PLR0911
         if isinstance(node, Lit):
             return repr(node.value)
         if isinstance(node, Ident):

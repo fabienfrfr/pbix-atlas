@@ -165,7 +165,7 @@ class LineageGraphBuilder:
                 continue
 
             for col, source_col in zip(
-                inferred.columns, inferred.source_columns or [None] * len(inferred.columns)
+                inferred.columns, inferred.source_columns or [None] * len(inferred.columns), strict=False
             ):
                 cid = node_id(NodeType.COLUMN, table, col)
                 g.add_node(

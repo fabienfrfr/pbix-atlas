@@ -6,6 +6,8 @@ reversible: upstream/downstream are just two traversals of the same graph.
 
 from __future__ import annotations
 
+import json
+from contextlib import suppress
 from pathlib import Path
 
 import networkx as nx
@@ -103,16 +105,12 @@ def export_json(graph: nx.DiGraph, path: str | Path) -> Path:
     `PythonPipelineGenerator` (which re-reads and re-parses the whole .pbix)
     just to call this was unnecessary coupling - this now works on any
     already-built graph, exactly like its siblings."""
-    import json
-
     data = nx.node_link_data(graph, edges="edges")
     for node in data["nodes"]:
         for key in ("operation", "body"):
             if isinstance(node.get(key), str):
-                try:
+                with suppress(json.JSONDecodeError):
                     node[key] = json.loads(node[key])
-                except json.JSONDecodeError:
-                    pass
     path = Path(path)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     return path

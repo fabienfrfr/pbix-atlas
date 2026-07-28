@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 from typing import ClassVar, Protocol
-from urllib.parse import urlparse
 
 from .models import SourceRef
 

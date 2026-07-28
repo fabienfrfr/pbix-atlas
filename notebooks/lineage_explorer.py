@@ -189,8 +189,8 @@ def _(mo):
 def _(export_edges_csv, export_json, export_nodes_csv, graph):
     export_nodes_csv(graph, "lineage_nodes.csv")
     export_edges_csv(graph, "lineage_edges.csv")
-    #export_graphml(graph, "lineage.graphml")
     export_json(graph, "lineage.json")
+    export_graphml(graph, "lineage.graphml")
     print("Exported: lineage_nodes.csv, lineage_edges.csv, lineage.graphml, lineage.json")
     return
 

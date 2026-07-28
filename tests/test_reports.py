@@ -30,7 +30,7 @@ def test_markdown_includes_source_table_and_view():
 def test_markdown_includes_ascii_tree_and_table():
     md = render_source_tree_markdown(_graph_with_view())
     assert "```" in md  # ASCII tree fenced block
-    assert "| Table | Vue distante | Colonnes | Fiabilité | Détail |" in md
+    assert "| Table | View | Columns | Reliability | Preview |" in md
 
 
 def test_write_source_tree_report_writes_file():

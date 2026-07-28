@@ -25,9 +25,8 @@ def test_calculated_column_can_reference_a_measure():
     CALCULATE(...)). Resolving calculated columns before measures exist in
     the lookup - or without passing measure_lookup at all - would silently
     (or, post unresolved-fallback, needlessly) fail this every time."""
-    cc_df = pd.DataFrame(
-        [{"TableName": "T", "ColumnName": "Status", "Expression": "IF(T[X] > CALCULATE([Avg Measure]), \"OK\", \"KO\")"}]
-    )
+    expr = 'IF(T[X] > CALCULATE([Avg Measure]), "OK", "KO")'
+    cc_df = pd.DataFrame([{"TableName": "T", "ColumnName": "Status", "Expression": expr}])
     measures_df = pd.DataFrame([{"TableName": "T", "Name": "Avg Measure", "Expression": "AVERAGE(T[X])"}])
     model = _StubModel(cc_df, measures_df)
 

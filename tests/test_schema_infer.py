@@ -45,7 +45,10 @@ def test_literal_rename_is_applied():
         ),
         (
             "Renamed",
-            _invoke("Table.RenameColumns", [_ident("Type modifié"), _list([_list([_lit("raw_name"), _lit("Nice Name")])])]),
+            _invoke(
+                "Table.RenameColumns",
+                [_ident("Type modifié"), _list([_list([_lit("raw_name"), _lit("Nice Name")])])],
+            ),
         ),
     ]
     result = infer_schema_from_steps(steps)

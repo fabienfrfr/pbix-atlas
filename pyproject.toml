@@ -73,14 +73,16 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "C4", "RUF", "BLE", "PLR", "SIM"]
-ignore = ["BLE001"]
+ignore = ["BLE001", "PLR0912", "PLR0915"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["pbix_atlas"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/pbix_atlas/codegen.py" = ["E501"]
+"src/pbix_atlas/reports.py" = ["PLR2004"]
 "tests/*" = ["PLR2004"]
+"src/pbix_atlas/schema_infer.py" = ["PLR2004"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -20,7 +20,9 @@ def test_stops_at_first_query_with_columns():
     g.add_edge("q2", "col2", type=EdgeType.FEEDS.value)
 
     schema = source_schema(g)
-    assert schema["my_source"] == {"q1": {"view": None, "columns": ["col1"], "names_reliable": True}}
+    assert schema["my_source"] == {
+        "q1": {"view": None, "columns": ["col1"], "names_reliable": True, "renamed_columns": {}}
+    }
 
 
 def test_follows_column_less_pass_through_queries():
@@ -37,8 +39,8 @@ def test_follows_column_less_pass_through_queries():
 
     schema = source_schema(g)
     assert schema["my_source"] == {
-        "Root": {"view": None, "columns": [], "names_reliable": True},
-        "Staging": {"view": None, "columns": ["colA"], "names_reliable": True},
+        "Root": {"view": None, "columns": [], "names_reliable": True, "renamed_columns": {}},
+        "Staging": {"view": None, "columns": ["colA"], "names_reliable": True, "renamed_columns": {}},
     }
 
 
@@ -60,8 +62,8 @@ def test_does_not_follow_past_a_query_with_a_resolved_view():
 
     schema = source_schema(g)
     assert schema["my_source"] == {
-        "Root": {"view": None, "columns": [], "names_reliable": True},
-        "Leaf_BRZ": {"view": "RemoteEntityName", "columns": [], "names_reliable": True},
+        "Root": {"view": None, "columns": [], "names_reliable": True, "renamed_columns": {}},
+        "Leaf_BRZ": {"view": "RemoteEntityName", "columns": [], "names_reliable": True, "renamed_columns": {}},
     }
     assert "Downstream_SLV" not in schema["my_source"]
 
@@ -77,8 +79,8 @@ def test_multiple_sources_are_independent():
 
     schema = source_schema(g)
     assert set(schema.keys()) == {"source_1", "source_2"}
-    assert schema["source_1"] == {"q1": {"view": None, "columns": [], "names_reliable": True}}
-    assert schema["source_2"] == {"q2": {"view": None, "columns": [], "names_reliable": True}}
+    assert schema["source_1"] == {"q1": {"view": None, "columns": [], "names_reliable": True, "renamed_columns": {}}}
+    assert schema["source_2"] == {"q2": {"view": None, "columns": [], "names_reliable": True, "renamed_columns": {}}}
 
 
 def test_names_are_post_rename_marks_table_unreliable():

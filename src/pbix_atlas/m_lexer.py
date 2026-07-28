@@ -52,7 +52,7 @@ class MLexError(Exception):
     pass
 
 
-def tokenize(text: str) -> list[Token]:  # noqa: PLR0912, PLR0915
+def tokenize(text: str) -> list[Token]:
     tokens: list[Token] = []
     i, n = 0, len(text)
     while i < n:

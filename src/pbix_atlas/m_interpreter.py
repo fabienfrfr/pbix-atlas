@@ -119,7 +119,7 @@ class MInterpreter:
         self.stdlib = {**_default_stdlib(), **(stdlib or {})}
         self.globals = {**_default_globals(), **(globals_ or {})}
 
-    def eval(self, node: MNode, env: Env) -> Any:  # noqa: PLR0911, PLR0912
+    def eval(self, node: MNode, env: Env) -> Any:  # noqa: PLR0911
         if isinstance(node, Lit):
             return node.value
         if isinstance(node, Ident):
@@ -225,7 +225,7 @@ class MInterpreter:
             return target.df.iloc[int(index)]
         raise MRuntimeError(f"Cannot index {type(target).__name__} with {index!r}")
 
-    def _eval_binop(self, node: BinOp, env: Env) -> Any:  # noqa: PLR0911, PLR0912
+    def _eval_binop(self, node: BinOp, env: Env) -> Any:  # noqa: PLR0911
         if node.op == "and":
             return self.eval(node.left, env) and self.eval(node.right, env)
         if node.op == "or":

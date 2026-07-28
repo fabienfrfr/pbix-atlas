@@ -21,8 +21,8 @@ from .navigation import (
     source_schema,
     upstream,
 )
-from .reports import render_source_tree_markdown, write_source_tree_report
 from .pbix_model import PBIXModel
+from .reports import render_source_tree_markdown, write_source_tree_report
 from .sources import (
     LiteralUrlFallbackDetector,
     MFunctionSourceDetector,
