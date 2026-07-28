@@ -8,6 +8,8 @@ SRC_INIT=src/pbix_atlas/__init__.py
 coverage: ## prod-level > 95%
 	uv run pytest --cov=src --cov-report=term-missing
 
+marimo: ## notebook
+	uv run marimo edit notebooks/lineage_explorer.py
 
 mapper: ## Export project structure to JSON
 	uv run python3 mapper.py --to-json

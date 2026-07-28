@@ -7,30 +7,35 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import marimo as mo
-    import json
 
     from pbix_atlas import (
         LineageGraphBuilder,
         downstream,
         export_edges_csv,
         export_graphml,
+        export_json,
         export_nodes_csv,
         find_nodes,
         graph_summary,
+        print_source_schema,
         print_tree,
+        source_schema,
         upstream,
-        get_level,
+        write_source_tree_report,
     )
 
     return (
         LineageGraphBuilder,
         export_edges_csv,
-        export_graphml,
+        export_json,
         export_nodes_csv,
         find_nodes,
         graph_summary,
         mo,
+        print_source_schema,
         print_tree,
+        source_schema,
+        write_source_tree_report,
     )
 
 
@@ -44,9 +49,18 @@ def _():
 
 
 @app.cell
-def _(LineageGraphBuilder, export_graphml, file_path):
-    graph = LineageGraphBuilder().build(file_path)
-    export_graphml(graph, "lineage.graphml")   # opens in Gephi / yEd
+def _(file_path, mo):
+    mo.md("# PBIX Lineage Explorer")
+    pbix_path = mo.ui.text(value=file_path, label="Path to .pbix file")
+    pbix_path
+    return (pbix_path,)
+
+
+@app.cell
+def _(LineageGraphBuilder, graph_summary, pbix_path):
+    graph = LineageGraphBuilder().build(pbix_path.value)
+    summary = graph_summary(graph)
+    summary
     return (graph,)
 
 
@@ -76,22 +90,6 @@ def _(graph, mo):
 
     mo.Html(open(html_path, "r", encoding="utf-8").read())
     return
-
-
-@app.cell
-def _(file_path, mo):
-    mo.md("# PBIX Lineage Explorer")
-    pbix_path = mo.ui.text(value=file_path, label="Path to .pbix file")
-    pbix_path
-    return (pbix_path,)
-
-
-@app.cell
-def _(LineageGraphBuilder, graph_summary, pbix_path):
-    graph = LineageGraphBuilder().build(pbix_path.value)
-    summary = graph_summary(graph)
-    summary
-    return (graph,)
 
 
 @app.cell
@@ -146,17 +144,54 @@ def _(graph, node_downstream, print_tree):
 @app.cell
 def _(mo):
     mo.md("""
+    ## Source report (ASCII tree + Markdown)
+
+    Source -> remote view/entity (when known) -> table -> columns, with
+    column-name reliability (see `pbix_atlas.reports` /
+    `pbix_atlas.navigation.source_schema`).
+    """)
+    return
+
+
+@app.cell
+def _(graph, print_source_schema):
+    print_source_schema(graph)
+    return
+
+
+@app.cell
+def _(graph, source_schema):
+    import json as _json
+
+    source_schema_json_path = "source_schema.json"
+    with open(source_schema_json_path, "w", encoding="utf-8") as _f:
+        _json.dump(source_schema(graph), _f, ensure_ascii=False, indent=2)
+    print(f"Written: {source_schema_json_path}")
+    return
+
+
+@app.cell
+def _(graph, write_source_tree_report):
+    source_tree_md_path = write_source_tree_report(graph, "source_tree_report.md")
+    print(f"Written: {source_tree_md_path}")
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
     ## Export
     """)
     return
 
 
 @app.cell
-def _(export_edges_csv, export_graphml, export_nodes_csv, graph):
+def _(export_edges_csv, export_json, export_nodes_csv, graph):
     export_nodes_csv(graph, "lineage_nodes.csv")
     export_edges_csv(graph, "lineage_edges.csv")
-    export_graphml(graph, "lineage.graphml")
-    print("Exported: lineage_nodes.csv, lineage_edges.csv, lineage.graphml")
+    #export_graphml(graph, "lineage.graphml")
+    export_json(graph, "lineage.json")
+    print("Exported: lineage_nodes.csv, lineage_edges.csv, lineage.graphml, lineage.json")
     return
 
 

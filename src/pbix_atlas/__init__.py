@@ -9,12 +9,19 @@ from .navigation import (
     downstream,
     export_edges_csv,
     export_graphml,
+    export_json,
     export_nodes_csv,
     find_nodes,
     graph_summary,
+    output_schema,
+    print_output_schema,
+    print_source_schema,
     print_tree,
+    render_source_tree_lines,
+    source_schema,
     upstream,
 )
+from .reports import render_source_tree_markdown, write_source_tree_report
 from .pbix_model import PBIXModel
 from .sources import (
     LiteralUrlFallbackDetector,
@@ -24,7 +31,7 @@ from .sources import (
     normalize_source_identifier,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "DaxReference",
@@ -46,6 +53,7 @@ __all__ = [
     "downstream",
     "export_edges_csv",
     "export_graphml",
+    "export_json",
     "export_nodes_csv",
     "find_nodes",
     "generate_python_pipeline",
@@ -54,6 +62,13 @@ __all__ = [
     "list_sources",
     "node_id",
     "normalize_source_identifier",
+    "output_schema",
+    "print_output_schema",
+    "print_source_schema",
     "print_tree",
+    "render_source_tree_lines",
+    "render_source_tree_markdown",
+    "source_schema",
     "upstream",
+    "write_source_tree_report",
 ]

@@ -9,9 +9,12 @@ dist/
 .ruff_cache/
 .mypy_cache/
 *.pbix
+
 *.graphml
+lineage.json
 lineage_nodes.csv
 lineage_edges.csv
+
 .env
 uv.lock.bak
 uv.lock

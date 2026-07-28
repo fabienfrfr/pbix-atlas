@@ -47,3 +47,26 @@ def normalize(source_ref):
 @then(parsers.parse('the normalized identifier is "{expected}"'))
 def assert_normalized(normalized_identifier, expected):
     assert normalized_identifier == expected
+
+
+@given(
+    parsers.parse('a first detected source with system "{system}" and identifier "{identifier}"'),
+    target_fixture="source_refs",
+)
+def first_source_ref(system, identifier):
+    return [SourceRef(system=system, identifier=identifier, raw_match="")]
+
+
+@given(parsers.parse('a second detected source with system "{system}" and identifier "{identifier}"'))
+def second_source_ref(source_refs, system, identifier):
+    source_refs.append(SourceRef(system=system, identifier=identifier, raw_match=""))
+
+
+@when("I normalize both source identifiers", target_fixture="normalized_identifiers")
+def normalize_both(source_refs):
+    return [normalize_source_identifier(ref) for ref in source_refs]
+
+
+@then("the two normalized identifiers are different")
+def assert_different(normalized_identifiers):
+    assert normalized_identifiers[0] != normalized_identifiers[1]

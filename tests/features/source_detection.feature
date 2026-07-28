@@ -30,7 +30,13 @@ Feature: Physical source detection
     When I detect sources in the expression
     Then exactly 1 source is detected
 
-  Scenario: Normalizing an identifier strips the query string
+  Scenario: Normalizing an identifier keeps the query string (it may be the actual resource identity)
     Given a detected source with system "http" and identifier "https://example.com/req/export.php?id=42"
     When I normalize the source identifier
-    Then the normalized identifier is "example.com/req/export.php"
+    Then the normalized identifier is "https://example.com/req/export.php?id=42"
+
+  Scenario: Two calls to the same endpoint with different query params are distinct sources
+    Given a first detected source with system "http" and identifier "https://example.com/req/export.php?id=42"
+    And a second detected source with system "http" and identifier "https://example.com/req/export.php?id=43"
+    When I normalize both source identifiers
+    Then the two normalized identifiers are different

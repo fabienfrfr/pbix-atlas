@@ -41,18 +41,12 @@ class PythonPipelineGenerator:
         return path
 
     def export_json(self, path: str | Path) -> Path:
-        """More readable than GraphML: `operation`/`body` are nested JSON
-        objects here (GraphML flattens them to strings out of necessity)."""
-        import json
+        """Kept for backward compatibility - delegates to `navigation.export_json`,
+        which is the canonical implementation (it doesn't need a
+        `PythonPipelineGenerator`/pipeline-code machinery at all, just a graph)."""
+        from .navigation import export_json as _export_json
 
-        data = nx.node_link_data(self.graph, edges="edges")
-        for node in data["nodes"]:
-            for key in ("operation", "body"):
-                if isinstance(node.get(key), str):
-                    node[key] = json.loads(node[key])
-        path = Path(path)
-        path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-        return path
+        return _export_json(self.graph, path)
 
     def _query_nodes_in_order(self) -> list[str]:
         query_nodes = [n for n, d in self.graph.nodes(data=True) if d.get("type") == "query"]

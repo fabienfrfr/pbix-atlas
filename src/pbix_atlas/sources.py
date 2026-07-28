@@ -68,7 +68,9 @@ class SourceDetectorRegistry:
 
 
 def normalize_source_identifier(ref: SourceRef) -> str:
-    if ref.system in {"http", "odata"} and ref.identifier.startswith("http"):
-        parsed = urlparse(ref.identifier)
-        return f"{parsed.netloc}{parsed.path}"
+    """Kept as the identity key for a source node. For HTTP/OData
+    endpoints, the query string is *not* stripped: for parameterized
+    endpoints (e.g. `.../excel.php?id=1959` vs `?id=1692`), the query
+    string is exactly what tells two calls to the same script apart -
+    dropping it would silently merge distinct data sources into one node."""
     return ref.identifier

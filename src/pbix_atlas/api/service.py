@@ -16,6 +16,7 @@ from ..navigation import (
     downstream,
     export_edges_csv,
     export_graphml,
+    export_json,
     export_nodes_csv,
     find_nodes,
     graph_summary,
@@ -68,15 +69,18 @@ class LineageGraphCache:
         graphml_path = out / f"{stem}.graphml"
         nodes_csv_path = out / f"{stem}_nodes.csv"
         edges_csv_path = out / f"{stem}_edges.csv"
+        json_path = out / f"{stem}.json"
 
         export_graphml(graph, graphml_path)
         export_nodes_csv(graph, nodes_csv_path)
         export_edges_csv(graph, edges_csv_path)
+        export_json(graph, json_path)
 
         return {
             "graphml_path": str(graphml_path),
             "nodes_csv_path": str(nodes_csv_path),
             "edges_csv_path": str(edges_csv_path),
+            "json_path": str(json_path),
         }
 
     def codegen(self, pbix_path: str, output_path: str = "") -> dict:
