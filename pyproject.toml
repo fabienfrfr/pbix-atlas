@@ -86,3 +86,8 @@ known-first-party = ["pbix_atlas"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.1.0",
+]

@@ -35,7 +35,7 @@ build: ## Build package for PyPI
 	uv build
 
 publish: build ## Publish to PyPI (requires UV_PUBLISH_USERNAME/PASSWORD in .env)
-	uv publish
+	set -a; . ./$(ENV_FILE); uv publish
 
 mcp-login: ## Login to MCP registry via GitHub
 	mcp-publisher login github
