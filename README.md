@@ -1,8 +1,28 @@
-# pbix-atlas
+<h1 align="center">
+<p>🌐 PBIX‑Atlas</p>
+</h1>
+
+<p align="center">
+<a href="https://pypi.org/project/pbix-atlas/">
+<img alt="PyPI" src="https://img.shields.io/pypi/v/pbix-atlas?color=orange">
+</a>
+<a href="https://github.com/fabienfrfr/pbix-atlas/">
+<img alt="GitHub" src="https://img.shields.io/badge/github-fabienfrfr%2Fpbix--atlas-black?logo=github">
+</a>
+<a href="https://github.com/fabienfrfr/pbix-atlas/actions">
+<img alt="CI" src="https://img.shields.io/github/actions/workflow/status/fabienfrfr/pbix-atlas/tests.yml?label=tests">
+<a href="https://registry.modelcontextprotocol.io/?q=pbix-atlas">
+<img alt="MCP Registry" src="https://img.shields.io/badge/MCP-registry-purple?logo=protocols">
+</a>
+</p>
+
+<h3 align="center">
+<p>Full lineage graph for Power BI — from source to visual field</p>
+</h3>
 
 <!-- mcp-name: io.github.fabienfrfr/pbix-atlas -->
 
-Universal lineage graph for Power BI `.pbix` files: source to visual field in one traversable graph.
+**PbixAtlas** is an Universal lineage graph for Power BI `.pbix` files: source to visual field in one traversable graph.
 
 ```
 source (HTTP, OData, SQL, file...) --> Power Query (M)
