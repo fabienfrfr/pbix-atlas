@@ -50,7 +50,7 @@ from .sources import (
     normalize_source_identifier,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 __all__ = [
     "DaxReference",
