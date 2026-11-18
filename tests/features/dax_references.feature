@@ -1,0 +1,29 @@
+Feature: DAX reference parsing
+  As a lineage tool
+  I want to extract Table[Field] and [Field] references from DAX expressions
+  So that calculated columns and measures can be linked to what they depend on
+
+  Scenario: Parsing a qualified column reference
+    Given the DAX expression: SELECTEDVALUE(SALES[amount])
+    When I parse DAX references in the expression
+    Then a reference to table "SALES" and field "amount" is found
+
+  Scenario: Parsing a quoted table reference
+    Given the DAX expression: RELATED('DIM_PRODUCT'[name])
+    When I parse DAX references in the expression
+    Then a reference to table "DIM_PRODUCT" and field "name" is found
+
+  Scenario: Parsing an unqualified reference
+    Given the DAX expression: IF([STATUS_OK] = "OK", "OK", "KO")
+    When I parse DAX references in the expression
+    Then a reference with no table and field "STATUS_OK" is found
+
+  Scenario: Parsing a column name containing an apostrophe
+    Given the DAX expression: SALES[col_with'apostrophe]
+    When I parse DAX references in the expression
+    Then a reference to table "SALES" and field "col_with'apostrophe" is found
+
+  Scenario: Parsing an empty expression
+    Given an empty DAX expression
+    When I parse DAX references in the expression
+    Then no reference is found
